@@ -1,0 +1,217 @@
+#aliexpress-addr-fill-btn {
+  position: fixed;
+  z-index: 2147483647;
+  padding: 16px 26px;
+  background: #e62200;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  transition: background 0.15s, transform 0.1s;
+  line-height: 1.4;
+}
+
+#aliexpress-addr-fill-btn:hover {
+  background: #c41c00;
+  transform: translateY(-1px);
+}
+
+#aliexpress-addr-fill-btn:active {
+  transform: translateY(0);
+}
+
+#aliexpress-addr-fill-btn:disabled {
+  background: #999;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.aliexpress-addr-toast {
+  position: fixed;
+  bottom: 80px;
+  right: 24px;
+  z-index: 2147483647;
+  max-width: 320px;
+  padding: 10px 16px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  opacity: 1;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  word-break: break-word;
+}
+
+.aliexpress-addr-toast.error {
+  background: #b91c1c;
+}
+
+#aliexpress-addr-paywall {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.aliexpress-addr-paywall-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 360px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+.aliexpress-addr-paywall-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.aliexpress-addr-paywall-box h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+}
+
+.aliexpress-addr-paywall-box p {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.aliexpress-addr-paywall-btn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.aliexpress-addr-paywall-btn.subscribe {
+  background: #e62200;
+  color: #fff;
+}
+
+.aliexpress-addr-paywall-btn.subscribe:hover {
+  background: #c41c00;
+}
+
+.aliexpress-addr-paywall-btn.close {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.aliexpress-addr-paywall-btn.close:hover {
+  background: #e0e0e0;
+}
+
+/* ── Preview / edit panel ── */
+#aliexpress-addr-panel {
+  position: fixed;
+  z-index: 2147483647;
+  width: 320px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+
+.aliexpress-addr-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #e62200;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.aliexpress-addr-panel-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+.aliexpress-addr-panel-close:hover {
+  opacity: 1;
+}
+
+.aliexpress-addr-panel-textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border: none;
+  border-bottom: 1px solid #eee;
+  font-size: 12px;
+  font-family: 'Menlo', 'Consolas', monospace;
+  line-height: 1.55;
+  resize: vertical;
+  outline: none;
+  color: #1a1a1a;
+}
+
+.aliexpress-addr-panel-hint {
+  margin: 0;
+  padding: 4px 14px 8px;
+  font-size: 11px;
+  color: #999;
+}
+
+.aliexpress-addr-panel-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+}
+
+.aliexpress-addr-panel-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.aliexpress-addr-panel-btn.cancel {
+  background: #f0f0f0;
+  color: #555;
+}
+
+.aliexpress-addr-panel-btn.cancel:hover {
+  background: #e0e0e0;
+}
+
+.aliexpress-addr-panel-btn.apply {
+  background: #e62200;
+  color: #fff;
+}
+
+.aliexpress-addr-panel-btn.apply:hover {
+  background: #c41c00;
+}

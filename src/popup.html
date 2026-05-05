@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AliExpress Address Filler</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Address Filler</h1>
+
+    <!-- Screen: Loading -->
+    <div id="screen-loading" class="screen">
+      <div class="loading-center">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <!-- Screen: Auth (Sign Up / Log In) -->
+    <div id="screen-auth" class="screen" hidden>
+      <div class="tabs">
+        <button id="tab-signup" class="tab active">Sign Up</button>
+        <button id="tab-login" class="tab">Log In</button>
+      </div>
+
+      <!-- Sign Up panel -->
+      <div id="panel-signup" class="auth-panel">
+        <input id="signup-email" type="email" placeholder="Email address" autocomplete="email">
+        <input id="signup-password" type="password" placeholder="Password (min 8 characters)" autocomplete="new-password">
+        <button id="btn-signup" class="btn primary">Create Free Account</button>
+        <p class="trial-hint">✓ 7-day free trial &nbsp;·&nbsp; then $9.99/month</p>
+      </div>
+
+      <!-- Log In panel -->
+      <div id="panel-login" class="auth-panel" hidden>
+        <input id="login-email" type="email" placeholder="Email address" autocomplete="email">
+        <input id="login-password" type="password" placeholder="Password" autocomplete="current-password">
+        <button id="btn-login" class="btn primary">Log In</button>
+        <button id="btn-forgot" class="btn text">Forgot password?</button>
+      </div>
+
+      <div id="auth-error" class="error" hidden></div>
+      <div id="auth-success" class="success" hidden></div>
+    </div>
+
+    <!-- Screen: OTP verification -->
+    <div id="screen-otp" class="screen" hidden>
+      <h2 class="otp-title">Check your email</h2>
+      <p class="otp-subtitle">We sent a 6-digit code to <span id="otp-email"></span></p>
+      <input id="otp-code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="––––––" autocomplete="one-time-code">
+      <button id="btn-verify" class="btn primary">Verify</button>
+      <button id="btn-resend" class="btn text">Resend code</button>
+      <button id="btn-otp-back" class="btn text">Use a different email</button>
+      <div id="otp-error" class="error" hidden></div>
+      <div id="otp-success" class="success" hidden></div>
+    </div>
+
+    <!-- Screen: Trial Active -->
+    <div id="screen-trial" class="screen" hidden>
+      <div class="status-badge trial">Free Trial</div>
+      <p id="trial-days" class="trial-days-text"></p>
+      <p id="trial-email" class="info"></p>
+      <p class="hint">Copy an address, then click the red button on AliExpress to fill the form.</p>
+      <hr>
+      <div class="setting-row">
+        <label class="setting-label" for="pos-select-trial">Button position</label>
+        <select id="pos-select-trial" class="setting-select">
+          <option value="top-right">Top Right</option>
+          <option value="top-left">Top Left</option>
+          <option value="bottom-right">Bottom Right</option>
+          <option value="bottom-left">Bottom Left</option>
+        </select>
+      </div>
+      <button id="btn-subscribe-trial" class="btn primary">Subscribe — $9.99/mo</button>
+      <button id="btn-signout-trial" class="btn text">Sign Out</button>
+    </div>
+
+    <!-- Screen: Subscribed -->
+    <div id="screen-subscribed" class="screen" hidden>
+      <div class="status-badge active">Active</div>
+      <p id="subscribed-email" class="info"></p>
+      <p class="hint">Copy an address, then click the red button on AliExpress to fill the form.</p>
+      <hr>
+      <div class="setting-row">
+        <label class="setting-label" for="pos-select-sub">Button position</label>
+        <select id="pos-select-sub" class="setting-select">
+          <option value="top-right">Top Right</option>
+          <option value="top-left">Top Left</option>
+          <option value="bottom-right">Bottom Right</option>
+          <option value="bottom-left">Bottom Left</option>
+        </select>
+      </div>
+      <button id="btn-manage" class="btn secondary">Manage Subscription</button>
+      <button id="btn-signout-sub" class="btn text">Sign Out</button>
+    </div>
+
+    <!-- Screen: Expired / Blocked -->
+    <div id="screen-expired" class="screen" hidden>
+      <div class="status-badge expired">Access Ended</div>
+      <p id="expired-reason" class="info"></p>
+      <button id="btn-subscribe-expired" class="btn primary">Subscribe — $9.99/mo</button>
+      <button id="btn-signout-expired" class="btn text">Sign Out</button>
+    </div>
+
+    <!-- Loading overlay (shown during async operations within a screen) -->
+    <div id="loading-overlay" class="loading-overlay" hidden>
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
