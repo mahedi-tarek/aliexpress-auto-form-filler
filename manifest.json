@@ -8,7 +8,7 @@
     "https://*.aliexpress.com/*",
     "https://*.aliexpress.us/*",
     "https://*.supabase.co/*",
-    "https://aliexpres-address-filler.mhtareqarz.workers.dev/*"
+    "https://address-filler-api.mhtareqarz.workers.dev/*"
   ],
   "action": {
     "default_popup": "popup.html",

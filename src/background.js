@@ -1,5 +1,5 @@
 // TODO: Replace with your actual Cloudflare Worker URL after deployment
-const API_BASE = 'https://aliexpres-address-filler.mhtareqarz.workers.dev';
+const API_BASE = 'https://address-filler-api.mhtareqarz.workers.dev';
 // TODO: Replace with your Supabase project URL and anon key
 const SUPABASE_URL = 'https://tahjkdlttlxgqhoxjqxd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhaGprZGx0dGx4Z3Fob3hqcXhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTk2MjAsImV4cCI6MjA5MzMzNTYyMH0.7k1XKp2g6iOzetJZZWTI-Gqh1okTwJumWLkLgNpw2c8';

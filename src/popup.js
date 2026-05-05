@@ -2,8 +2,7 @@ import { signUp, signIn, sendPasswordReset, refreshAccessToken, verifySignupOtp,
 
 // TODO: Replace with your actual Cloudflare Worker URL after deployment
 const API_BASE = 'https://address-filler-api.mhtareqarz.workers.dev';
-// TODO: Replace with your Stripe Payment Link URL
-const PAYMENT_LINK = 'https://buy.stripe.com/YOUR_PAYMENT_LINK';
+const PAYMENT_LINK = 'https://buy.stripe.com/00wfZh00rfTGatS7KN0x201';
 
 const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
@@ -180,7 +179,7 @@ function renderStatus(status) {
     $('subscribed-email').textContent = email || '';
     $('btn-manage').onclick = () => {
       if (portalUrl) chrome.tabs.create({ url: portalUrl });
-      else chrome.tabs.create({ url: PAYMENT_LINK });
+      else openPaymentLink();
     };
     showScreen('subscribed');
     return;
@@ -603,8 +602,12 @@ $('login-password').addEventListener('keydown', (e) => {
 
 // ── Subscribe buttons ──────────────────────────────────────────────────────
 
-function openPaymentLink() {
-  chrome.tabs.create({ url: PAYMENT_LINK });
+async function openPaymentLink() {
+  const { userEmail } = await chrome.storage.local.get('userEmail');
+  const url = userEmail
+    ? `${PAYMENT_LINK}?prefilled_email=${encodeURIComponent(userEmail)}`
+    : PAYMENT_LINK;
+  chrome.tabs.create({ url });
 }
 
 $('btn-subscribe-trial').addEventListener('click', openPaymentLink);
