@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Successful — AliExpress Address Filler</title>
+  <meta name="robots" content="noindex" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #e43a3a;
+      --red-dark: #c42e2e;
+      --bg: #0d0d0d;
+      --surface: #161616;
+      --surface2: #1e1e1e;
+      --border: #2a2a2a;
+      --text: #f0f0f0;
+      --muted: #888;
+      --green: #4caf7d;
+      --green-bg: rgba(76,175,125,0.08);
+      --green-border: rgba(76,175,125,0.25);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; font-size: 15px;
+      text-decoration: none; color: var(--text);
+    }
+    .nav-logo span {
+      background: var(--red); color: #fff; border-radius: 6px;
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center; font-size: 14px;
+    }
+    .nav-back {
+      color: var(--muted); text-decoration: none; font-size: 14px;
+    }
+    .nav-back:hover { color: var(--text); }
+
+    /* HERO */
+    .page {
+      max-width: 680px; margin: 0 auto;
+      padding: 64px 24px 80px;
+    }
+
+    /* SUCCESS BANNER */
+    .success-banner {
+      background: var(--green-bg);
+      border: 1px solid var(--green-border);
+      border-radius: 16px;
+      padding: 32px;
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .check-circle {
+      width: 72px; height: 72px;
+      background: var(--green);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 36px;
+      animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes pop {
+      0%   { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .success-banner h1 {
+      font-size: 28px; font-weight: 800;
+      letter-spacing: -0.5px; margin-bottom: 8px;
+    }
+    .success-banner p {
+      color: var(--muted); font-size: 15px;
+    }
+
+    /* DOWNLOAD CARD */
+    .download-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .download-card h2 {
+      font-size: 20px; font-weight: 700; margin-bottom: 8px;
+    }
+    .download-card p {
+      color: var(--muted); font-size: 14px; margin-bottom: 24px;
+    }
+    .btn-download {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--red); color: #fff;
+      padding: 15px 36px; border-radius: 10px;
+      text-decoration: none; font-size: 17px; font-weight: 700;
+      transition: background 0.15s, transform 0.1s;
+      margin-bottom: 12px;
+    }
+    .btn-download:hover {
+      background: var(--red-dark); transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(228,58,58,0.3);
+    }
+    .download-note {
+      display: block;
+      font-size: 12px; color: var(--muted); margin-top: 4px;
+    }
+
+    /* STEPS */
+    .steps-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 32px;
+    }
+    .steps-card h2 {
+      font-size: 18px; font-weight: 700; margin-bottom: 24px;
+    }
+    .step {
+      display: grid; grid-template-columns: 36px 1fr; gap: 16px;
+      padding: 16px 0; border-bottom: 1px solid var(--border);
+      align-items: start;
+    }
+    .step:last-child { border-bottom: none; padding-bottom: 0; }
+    .step-num {
+      width: 32px; height: 32px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 13px; color: var(--red); flex-shrink: 0;
+    }
+    .step-title { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
+    .step-desc { color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .step-desc code {
+      background: var(--surface2); border: 1px solid var(--border);
+      padding: 1px 6px; border-radius: 4px; font-size: 12px;
+    }
+
+    /* ACCOUNT SECTION */
+    .account-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 32px;
+    }
+    .account-card h2 {
+      font-size: 18px; font-weight: 700; margin-bottom: 8px;
+    }
+    .account-card > p {
+      color: var(--muted); font-size: 14px; margin-bottom: 20px;
+    }
+    .account-steps { display: flex; flex-direction: column; gap: 10px; }
+    .account-step {
+      display: flex; gap: 12px; align-items: flex-start;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px;
+    }
+    .account-step-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .account-step-title { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+    .account-step-desc { color: var(--muted); font-size: 12px; }
+
+    /* SUPPORT */
+    .support-row {
+      text-align: center;
+      color: var(--muted); font-size: 14px;
+    }
+    .support-row a { color: var(--muted); }
+    .support-row a:hover { color: var(--text); }
+
+    /* FOOTER */
+    footer {
+      text-align: center; padding: 32px 24px;
+      color: var(--muted); font-size: 13px;
+      border-top: 1px solid var(--border); margin-top: 40px;
+    }
+    footer a { color: var(--muted); text-decoration: underline; }
+    footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <span>📋</span>
+    AliExpress Address Filler
+  </a>
+  <a href="index.html" class="nav-back">← Back to home</a>
+</nav>
+
+<div class="page">
+
+  <!-- SUCCESS BANNER -->
+  <div class="success-banner">
+    <div class="check-circle">✓</div>
+    <h1>Payment successful!</h1>
+    <p>Your subscription is active. Download the extension below to get started.</p>
+  </div>
+
+  <!-- DOWNLOAD -->
+  <div class="download-card">
+    <h2>⬇ Download the extension</h2>
+    <p>Click the button below to download the zip file from Google Drive.</p>
+    <!-- TODO: Replace # with your actual Google Drive share link -->
+    <a href="#" class="btn-download">
+      Download Extension (.zip)
+    </a>
+    <span class="download-note">Hosted on Google Drive · Chrome extension · ~50 KB</span>
+  </div>
+
+  <!-- INSTALL STEPS -->
+  <div class="steps-card">
+    <h2>How to install</h2>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">Unzip the downloaded file</div>
+        <div class="step-desc">Find the downloaded zip in your Downloads folder and extract it. You'll get a folder called <code>AliExpress-Address-Filler</code>.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">Open Chrome Extensions</div>
+        <div class="step-desc">In Chrome, go to <code>chrome://extensions</code> in the address bar and press Enter.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">Enable Developer Mode</div>
+        <div class="step-desc">Toggle on <strong>Developer mode</strong> in the top-right corner of the Extensions page.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-title">Load the extension</div>
+        <div class="step-desc">Click <strong>Load unpacked</strong>, then select the <code>AliExpress-Address-Filler</code> folder you extracted. The extension will appear in your list.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div>
+        <div class="step-title">Pin it to your toolbar (optional)</div>
+        <div class="step-desc">Click the puzzle piece icon in Chrome's toolbar → find "AliExpress Address Filler" → click the pin icon so it's always visible.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACCOUNT SETUP -->
+  <div class="account-card">
+    <h2>Create your account</h2>
+    <p>Click the extension icon in your toolbar to open the popup, then follow these steps:</p>
+    <div class="account-steps">
+      <div class="account-step">
+        <div class="account-step-icon">✉️</div>
+        <div>
+          <div class="account-step-title">Sign up with your email</div>
+          <div class="account-step-desc">Enter the same email you used for payment, and choose a password (minimum 8 characters).</div>
+        </div>
+      </div>
+      <div class="account-step">
+        <div class="account-step-icon">🔢</div>
+        <div>
+          <div class="account-step-title">Verify your email</div>
+          <div class="account-step-desc">We'll send a 6-digit code to your inbox. Enter it in the extension popup to confirm your account.</div>
+        </div>
+      </div>
+      <div class="account-step">
+        <div class="account-step-icon">✅</div>
+        <div>
+          <div class="account-step-title">You're in — subscription active</div>
+          <div class="account-step-desc">Your subscription is linked to your account. The popup will show "Active" status.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW TO USE -->
+  <div class="steps-card">
+    <h2>How to use it</h2>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">Copy any address</div>
+        <div class="step-desc">Select and copy an address from an email, eBay order, spreadsheet — anywhere.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">Open AliExpress checkout</div>
+        <div class="step-desc">Go to the delivery address form on AliExpress. A red button appears in the corner of the page.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">Click "📋 Fill address"</div>
+        <div class="step-desc">All fields — name, street, city, postcode, country, phone code — fill instantly. Allow clipboard access if Chrome asks (one-time prompt).</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="support-row">
+    Need help? Email <a href="mailto:mhtareqarz@gmail.com">mhtareqarz@gmail.com</a>
+  </div>
+
+</div>
+
+<footer>
+  <p>
+    &copy; 2026 AliExpress Address Filler &nbsp;·&nbsp;
+    <a href="index.html">Home</a>
+    &nbsp;·&nbsp;
+    <a href="mailto:mhtareqarz@gmail.com">Support</a>
+  </p>
+</footer>
+
+</body>
+</html>
