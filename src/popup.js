@@ -1,8 +1,8 @@
-import { signUp, signIn, sendPasswordReset, refreshAccessToken, verifySignupOtp, resendSignupOtp } from './auth.js';
+import { signUp, signIn, sendPasswordReset, verifySignupOtp, resendSignupOtp, tryRefreshToken } from './auth.js';
 
-// TODO: Replace with your actual Cloudflare Worker URL after deployment
-const API_BASE = 'https://address-filler-api.mhtareqarz.workers.dev';
-const PAYMENT_LINK = 'https://buy.stripe.com/00wfZh00rfTGatS7KN0x201';
+// API_BASE and PAYMENT_LINK are injected at build time by webpack DefinePlugin.
+const API_BASE     = process.env.API_BASE;
+const PAYMENT_LINK = process.env.PAYMENT_LINK;
 
 const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
@@ -55,7 +55,7 @@ function friendlyError(result) {
     return { msg: 'A verification email was recently sent. Check your inbox (and spam), or wait a minute before requesting another.', action: 'show_otp' };
 
   if (code === 'weak_password'          || /password.*weak|too short|password.*strong/.test(low))
-    return { msg: 'Password is too weak. Use at least 8 characters with a mix of letters and numbers.', action: null };
+    return { msg: 'Password is too weak. Please choose a stronger password.', action: null };
 
   if (code === 'validation_failed'      || /invalid.*email|unable to validate/.test(low))
     return { msg: 'Please enter a valid email address.', action: null };
@@ -140,36 +140,6 @@ function showOtpScreen(email) {
   setTimeout(() => $('otp-code').focus(), 0);
 }
 
-// ── Token refresh ──────────────────────────────────────────────────────────
-
-async function tryRefreshToken(refreshToken) {
-  if (!refreshToken) return null;
-  try {
-    const result = await refreshAccessToken(refreshToken);
-    if (result.access_token) {
-      await chrome.storage.local.set({
-        accessToken: result.access_token,
-        refreshToken: result.refresh_token || refreshToken,
-      });
-      return result.access_token;
-    }
-  } catch {
-    // fall through
-  }
-  return null;
-}
-
-// ── Backend verify ─────────────────────────────────────────────────────────
-
-async function verifyWithBackend(accessToken) {
-  const res = await fetch(`${API_BASE}/auth/verify`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ jwt: accessToken }),
-  });
-  return res.json();
-}
-
 // ── Render status to correct screen ───────────────────────────────────────
 
 function renderStatus(status) {
@@ -218,13 +188,11 @@ async function init() {
   syncPositionSelects(buttonPosition || 'top-right');
 
   const stored = await chrome.storage.local.get(null);
-  console.log('[popup] init() — storage snapshot:', stored);
 
   // Pending OTP verification ALWAYS takes priority — even over a stale
   // accessToken. Otherwise verifyAndRender could clear storage on 401 and
   // wipe pendingOtpEmail before the user gets a chance to enter their code.
   if (stored.pendingOtpEmail) {
-    console.log('[popup] restoring OTP screen for', stored.pendingOtpEmail);
     showOtpScreen(stored.pendingOtpEmail);
     return;
   }
@@ -310,6 +278,7 @@ async function verifyAndRender(accessToken, refreshToken) {
 $('btn-signup').addEventListener('click', async () => {
   const email = $('signup-email').value.trim();
   const password = $('signup-password').value;
+  const username = $('signup-username').value.trim();
 
   if (!email || !password) {
     showAuthError('Please fill in both your email and a password.');
@@ -319,17 +288,13 @@ $('btn-signup').addEventListener('click', async () => {
     showAuthError('Please enter a valid email address.');
     return;
   }
-  if (password.length < 8) {
-    showAuthError('Password must be at least 8 characters.');
-    return;
-  }
 
   showOverlay(true);
   clearAuthMessages();
 
   let result;
   try {
-    result = await signUp(email, password);
+    result = await signUp(email, password, username);
   } catch {
     showOverlay(false);
     showAuthError('Connection failed. Check your internet and try again.');
@@ -337,7 +302,6 @@ $('btn-signup').addEventListener('click', async () => {
   }
 
   showOverlay(false);
-  console.log('[popup] signup response:', result);
 
   // Supabase 500 with "Error sending confirmation email" — no email was sent,
   // so don't route to OTP. Tell the user plainly.
@@ -391,8 +355,6 @@ $('btn-signup').addEventListener('click', async () => {
 
   // Normal path — confirmation email sent
   await chrome.storage.local.set({ pendingOtpEmail: email });
-  const verify = await chrome.storage.local.get('pendingOtpEmail');
-  console.log('[popup] signup → pendingOtpEmail saved as:', verify.pendingOtpEmail);
   showOtpScreen(email);
 });
 
@@ -473,6 +435,8 @@ $('btn-forgot').addEventListener('click', async () => {
 
 $('tab-signup').addEventListener('click', () => { switchTab('signup'); clearAuthMessages(); });
 $('tab-login').addEventListener('click', () => { switchTab('login'); clearAuthMessages(); });
+$('btn-go-signup').addEventListener('click', () => { switchTab('signup'); clearAuthMessages(); });
+$('btn-go-login').addEventListener('click', () => { switchTab('login'); clearAuthMessages(); });
 
 // ── OTP verify / resend / back ────────────────────────────────────────────
 
@@ -575,7 +539,7 @@ $('btn-resend').addEventListener('click', async () => {
 
 $('btn-otp-back').addEventListener('click', async () => {
   await chrome.storage.local.remove('pendingOtpEmail');
-  switchTab('signup');
+  switchTab('login');
   clearAuthMessages();
   showScreen('auth');
 });
@@ -618,7 +582,7 @@ $('btn-subscribe-expired').addEventListener('click', openPaymentLink);
 async function signOut() {
   await chrome.storage.local.clear();
   showScreen('auth');
-  switchTab('signup');
+  switchTab('login');
 }
 
 $('btn-signout-trial').addEventListener('click', signOut);

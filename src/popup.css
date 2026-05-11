@@ -93,6 +93,30 @@ input[type="text"]:focus {
   text-align: center;
 }
 
+.switch-hint {
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+  margin: 4px 0 0;
+}
+
+.btn.link {
+  display: inline;
+  width: auto;
+  background: none;
+  border: none;
+  color: #e62200;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.btn.link:hover {
+  color: #c41c00;
+}
+
 /* ── Buttons ── */
 .btn {
   width: 100%;

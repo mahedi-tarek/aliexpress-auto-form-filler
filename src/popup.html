@@ -20,24 +20,27 @@
     <!-- Screen: Auth (Sign Up / Log In) -->
     <div id="screen-auth" class="screen" hidden>
       <div class="tabs">
-        <button id="tab-signup" class="tab active">Sign Up</button>
-        <button id="tab-login" class="tab">Log In</button>
+        <button id="tab-signup" class="tab">Sign Up</button>
+        <button id="tab-login" class="tab active">Log In</button>
       </div>
 
       <!-- Sign Up panel -->
-      <div id="panel-signup" class="auth-panel">
+      <div id="panel-signup" class="auth-panel" hidden>
+        <input id="signup-username" type="text" placeholder="Username (optional)" autocomplete="username">
         <input id="signup-email" type="email" placeholder="Email address" autocomplete="email">
-        <input id="signup-password" type="password" placeholder="Password (min 8 characters)" autocomplete="new-password">
+        <input id="signup-password" type="password" placeholder="Password" autocomplete="new-password">
         <button id="btn-signup" class="btn primary">Create Free Account</button>
         <p class="trial-hint">✓ 7-day free trial &nbsp;·&nbsp; then $9.99/month</p>
+        <p class="switch-hint">Already have an account? <button id="btn-go-login" class="btn link">Log In</button></p>
       </div>
 
       <!-- Log In panel -->
-      <div id="panel-login" class="auth-panel" hidden>
+      <div id="panel-login" class="auth-panel">
         <input id="login-email" type="email" placeholder="Email address" autocomplete="email">
         <input id="login-password" type="password" placeholder="Password" autocomplete="current-password">
         <button id="btn-login" class="btn primary">Log In</button>
         <button id="btn-forgot" class="btn text">Forgot password?</button>
+        <p class="switch-hint">Don't have an account? <button id="btn-go-signup" class="btn link">Sign Up</button></p>
       </div>
 
       <div id="auth-error" class="error" hidden></div>
