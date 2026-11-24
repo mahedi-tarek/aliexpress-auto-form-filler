@@ -100,6 +100,13 @@ async function processEvent(event, env) {
         console.error('checkout.session.completed: no matching profile', session.id);
         break;
       }
+      // Never re-point an account that already has a live subscription with a
+      // different Stripe customer (e.g. someone paying with a forged
+      // client_reference_id or look-alike email).
+      if (profile.subscription_status === 'active' && profile.stripe_customer_id && profile.stripe_customer_id !== customerId) {
+        console.error('checkout.session.completed: profile already subscribed under another customer', session.id);
+        break;
+      }
 
       const ok = await updateProfile(profile.id, {
         stripe_customer_id: customerId,

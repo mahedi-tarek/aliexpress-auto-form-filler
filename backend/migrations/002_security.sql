@@ -36,3 +36,26 @@ alter table public.profiles add column if not exists grace_period_end timestampt
 create index if not exists profiles_stripe_customer_idx on public.profiles (stripe_customer_id);
 
 notify pgrst, 'reload schema';
+
+-- 5) Enforce the per-account device limit atomically (closes the race where
+--    two devices register at the same instant). Keep in sync with DEVICE_LIMIT
+--    in wrangler.toml.
+create or replace function public.enforce_device_limit() returns trigger
+language plpgsql as $$
+declare
+  max_devices constant int := 1;
+  n int;
+begin
+  perform 1 from public.profiles where id = new.account_id for update;
+  select count(*) into n from public.devices where account_id = new.account_id;
+  if n >= max_devices then
+    raise exception 'device_limit_reached' using errcode = 'P0001';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists devices_limit_trg on public.devices;
+create trigger devices_limit_trg before insert on public.devices
+  for each row execute function public.enforce_device_limit();
+
+notify pgrst, 'reload schema';

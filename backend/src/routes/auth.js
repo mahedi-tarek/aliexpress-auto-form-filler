@@ -36,8 +36,15 @@ async function gateDevice(accountId, deviceId, label, env) {
   }
 
   if (devices.length < limit) {
-    await insertDevice({ accountId, deviceId, label }, env);
-    return { ok: true, deviceCount: devices.length + 1, deviceLimit: limit };
+    // The DB trigger (migration 002) re-checks the limit atomically, so two
+    // devices racing for the last seat can't both get in.
+    const inserted = await insertDevice({ accountId, deviceId, label }, env);
+    if (inserted) return { ok: true, deviceCount: devices.length + 1, deviceLimit: limit };
+    const after = await listDevices(accountId, env);
+    if (after.some(d => d.device_id === deviceId)) {
+      return { ok: true, deviceCount: after.length, deviceLimit: limit };
+    }
+    return { ok: false, deviceCount: after.length, deviceLimit: limit };
   }
 
   return { ok: false, deviceCount: devices.length, deviceLimit: limit };

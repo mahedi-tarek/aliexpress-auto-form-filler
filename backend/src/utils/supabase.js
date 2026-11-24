@@ -37,13 +37,17 @@ export async function getProfileById(userId, env, userJwt = null) {
 }
 
 export async function getProfileByEmail(email, env, userJwt = null) {
+  const target = String(email || '').trim().toLowerCase();
+  if (!target) return null;
+  // ilike gives case-insensitivity but treats % and _ as wildcards, so the
+  // candidates are re-checked for an exact (case-folded) match below.
   const res = await fetch(
-    `${env.SUPABASE_URL}/rest/v1/profiles?email=ilike.${encodeURIComponent(email)}&select=*`,
+    `${env.SUPABASE_URL}/rest/v1/profiles?email=ilike.${encodeURIComponent(target)}&select=*`,
     { headers: authHeaders(env, userJwt) }
   );
   if (!res.ok) return null;
   const rows = await res.json();
-  return rows[0] ?? null;
+  return rows.find(r => String(r.email || '').toLowerCase() === target) ?? null;
 }
 
 export async function getProfileByStripeCustomer(customerId, env) {
