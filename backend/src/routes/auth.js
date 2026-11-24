@@ -35,7 +35,11 @@ function seatLimit(profile, env) {
 // hash is stored. Without the secret the network throttle is simply skipped.
 async function hashIp(request, env) {
   const ip = request.headers.get('CF-Connecting-IP');
-  if (!ip || !env.IP_HASH_SALT) return null;
+  if (!env.IP_HASH_SALT) {
+    console.error('IP_HASH_SALT is not set: per-network trial limit is DISABLED');
+    return null;
+  }
+  if (!ip) return null;
   const key = await crypto.subtle.importKey(
     'raw', new TextEncoder().encode(env.IP_HASH_SALT), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
   );

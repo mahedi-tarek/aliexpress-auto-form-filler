@@ -22,4 +22,5 @@ DEVICE_SWAP_COOLDOWN_HOURS = "24"
 # wrangler secret put RESEND_API_KEY
 # wrangler secret put STATUS_PRIVATE_KEY   (ECDSA P-256 private JWK, see .secrets/)
 # wrangler secret put EXTENSION_ID         (comma-separated extension IDs for CORS)
+# wrangler secret put IP_HASH_SALT         (random 32+ bytes; required for the per-network trial limit)
 # Optional: RESEND_FROM (verified sender), PORTAL_RETURN_URL
