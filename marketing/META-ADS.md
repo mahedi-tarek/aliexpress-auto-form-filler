@@ -1,5 +1,12 @@
 # Meta ads playbook: Address Filler for AliExpress
 
+## What is set up (Nov 24, 2026)
+- **Pixel:** "Address Filler Pixel", ID `1737813931026619` (business CloudVerge, ad account General Ads USD). It is installed on autoformfiller.xyz through `tracking.js`, behind a cookie-consent banner. Events: `PageView`, `Lead` + `AddToChrome` (any click on an "Add to Chrome" link), and `Subscribe` (success.html).
+- **Draft campaign in Ads Manager:** "Address Filler | Leads | Add to Chrome | Nov 2026", an Advantage+ leads campaign with a $25/day campaign budget.
+  - Ad set: "Advantage+ | IN PK BD PH AE UK US | Lead". It sends people to the website and optimizes for the Lead event on the Address Filler Pixel. Locations: India, Pakistan, Bangladesh, Philippines, UAE, UK, US. Advantage+ audience and placements.
+  - Ad: "Pain + Agency | 4 images + motion | v1". It runs on the Review Hunt BD Page with the reviewhunt_bd Instagram account. Media: the pain, before/after and two agency images, plus Meta's animated version. Copy: 2 primary texts, 3 headlines and 1 description. Link: `autoformfiller.xyz/?utm_source=meta&utm_medium=paid&utm_campaign=af_leads_nov26`.
+  - Catalog products (Bunon/Shopify), product tags, collage and AI image or background generation are all **off**.
+
 All images are in `marketing/meta-ads/`. Every ad links to **https://autoformfiller.xyz/**, not straight to the Chrome Web Store, so the Meta Pixel can see visits (see "Before you spend" below).
 
 ## Strategy in one paragraph
