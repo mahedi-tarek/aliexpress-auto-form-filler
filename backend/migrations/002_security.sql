@@ -4,7 +4,7 @@
 -- 1) Users must never be able to write their own subscription state through
 --    the public anon key. Only the Worker (service key, bypasses RLS) writes.
 alter table public.profiles enable row level security;
-revoke insert, update, delete on public.profiles from anon, authenticated;
+revoke insert, update, delete, truncate, references, trigger on public.profiles from anon, authenticated;
 do $$
 declare p record;
 begin
