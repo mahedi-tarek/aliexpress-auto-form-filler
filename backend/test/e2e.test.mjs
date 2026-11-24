@@ -38,7 +38,7 @@ globalThis.fetch = async (url, opts = {}) => {
   throw new Error('unexpected fetch ' + url);
 };
 const env = { SUPABASE_URL: SB, SUPABASE_ANON_KEY: 'anon', SUPABASE_SERVICE_KEY: 'svc', DEVICE_LIMIT: '1', DEVICE_SWAP_COOLDOWN_HOURS: '24',
-  STATUS_PRIVATE_KEY: fs.readFileSync(ROOT + '/.secrets/status-private.jwk.json', 'utf8'), STRIPE_WEBHOOK_SECRET: 'whsec_test', STRIPE_SECRET_KEY: 'sk', RESEND_API_KEY: 'r', EXTENSION_ID: 'bgbaeelkdofffpjbfpodcgmjjlnbkbjn' };
+  STATUS_PRIVATE_KEY: fs.readFileSync(ROOT + '/.secrets/status-private.jwk.json', 'utf8'), STRIPE_WEBHOOK_SECRET: 'whsec_test', IP_HASH_SALT: 'test-salt', STRIPE_SECRET_KEY: 'sk', RESEND_API_KEY: 'r', EXTENSION_ID: 'bgbaeelkdofffpjbfpodcgmjjlnbkbjn' };
 const call = async (path, body, headers = {}) => { const r = await worker.fetch(new Request('https://api.test' + path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': currentIp, ...headers }, body: typeof body === 'string' ? body : JSON.stringify(body) }), env); return { status: r.status, body: await r.json().catch(() => null), headers: r.headers }; };
 const verify = (jwt, deviceId) => call('/auth/verify', { jwt, deviceId, deviceLabel: 'Chrome on macOS' });
 
@@ -129,7 +129,9 @@ ok(carol().device_limit === 1 && a1.body.allowed && !a5.body.allowed && a5.body.
 currentIp = '9.9.9.9';
 for (const n of ['d1', 'd2', 'd3', 'd4']) db.users['jwt-' + n] = { id: crypto.randomUUID(), email: n + '@x.com' };
 const t1 = await verify('jwt-d1', 'dddddddd-0001'), t2 = await verify('jwt-d2', 'dddddddd-0002'), t3 = await verify('jwt-d3', 'dddddddd-0003'), t4 = await verify('jwt-d4', 'dddddddd-0004');
-ok(t1.body.reason === 'trial' && t2.body.reason === 'trial' && t3.body.reason === 'trial' && t4.body.reason === 'trial_used', '4th new trial from same network in 30 days refused');
+ok(t1.body.reason === 'trial' && t2.body.reason === 'trial' && t3.body.reason === 'trial' && t4.body.reason === 'trial_unavailable', '4th new trial from same network in 30 days refused');
+ok(db.profiles.find(p => p.email === 'd4@x.com').subscription_status === 'trialing', 'network limit does not permanently expire the account');
+currentIp = '8.8.8.8'; const t4b = await verify('jwt-d4', 'dddddddd-0004'); ok(t4b.body.reason === 'trial', 'same account can start trial from another network');
 ok(db.trial_devices.every(t => !t.ip_hash || /^[0-9a-f]{64}$/.test(t.ip_hash)), 'only hashed IPs stored');
 // invoice for another product's subscription is ignored
 await stripe({ type: 'invoice.payment_failed', data: { object: { customer: 'cus_C', parent: { subscription_details: { subscription: 'sub_P' } } } } });

@@ -38,7 +38,9 @@
   <ul>
     <li><strong>Account information:</strong> your email address, an optional username, and your password, which our authentication provider (Supabase) stores in hashed form. We need these so you can sign in and so we can manage your free trial and subscription.</li>
     <li><strong>Subscription status:</strong> whether you are on a trial or subscribed, your trial end date, and the Stripe customer and subscription IDs linked to your account.</li>
-    <li><strong>Device identifier:</strong> a random ID created when you install the extension, plus a short label such as "Chrome on macOS". We use it to enforce one device per subscription and one free trial per computer.</li>
+    <li><strong>Device identifier:</strong> a random ID created when you install the extension, plus a short label such as "Chrome on macOS". We use it to count the computers (seats) your plan allows and to allow one free trial per computer.</li>
+    <li><strong>Network fingerprint for trial abuse prevention:</strong> when a new free trial starts, we store a one-way keyed hash of your IP address (never the IP itself). It is used only to limit how many free trials can be started from one network, and is deleted with your account.</li>
+    <li><strong>Plan details:</strong> which plan you are on (Solo, Team, Agency or Agency Plus) and how many computers it covers.</li>
   </ul>
 
   <h2>Data we do NOT collect</h2>

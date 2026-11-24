@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Address Filler for AliExpress",
+  "name": "Address Filler for AliExpress – Dropshipping Address Autofill",
   "version": "1.1.0",
-  "description": "Paste a copied shipping address into AliExpress checkout forms in one click. 7-day free trial.",
+  "description": "Paste any customer address into AliExpress checkout in one click. Autofills name, street, city, ZIP & phone for dropshipping orders.",
   "permissions": [
     "clipboardRead",
     "storage",
@@ -45,5 +45,6 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  }
+  },
+  "short_name": "Address Filler"
 }

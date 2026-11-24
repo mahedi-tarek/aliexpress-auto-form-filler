@@ -3,9 +3,59 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AliExpress Address Filler — Chrome Extension</title>
-  <meta name="description" content="Stop retyping addresses on AliExpress. 7-day free trial. Fill your entire delivery form in one click." />
-  <style>
+  <title>AliExpress Address Autofill Extension for Dropshipping | Address Filler</title>
+  <meta name="description" content="Paste any customer address into AliExpress checkout in one click. Chrome extension that autofills name, street, city, ZIP and phone for dropshipping orders. 7-day free trial." />
+  <meta name="keywords" content="aliexpress address autofill, aliexpress address filler, dropshipping address autofill, autofill shipping address aliexpress, aliexpress chrome extension, copy paste address aliexpress, aliexpress order helper, shopify to aliexpress address, ebay to aliexpress address, dropshipping va tool" />
+  <link rel="canonical" href="https://autoformfiller.xyz/" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#0d0d0d" />
+  <link rel="icon" type="image/png" href="/icons/icon48.png" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Address Filler for AliExpress" />
+  <meta property="og:title" content="Fill AliExpress orders in one click — Address Filler" />
+  <meta property="og:description" content="Paste any customer address into AliExpress checkout. Built for dropshippers, VAs and agencies. 7-day free trial." />
+  <meta property="og:url" content="https://autoformfiller.xyz/" />
+  <meta property="og:image" content="https://autoformfiller.xyz/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Fill AliExpress orders in one click — Address Filler" />
+  <meta name="twitter:description" content="Paste any customer address into AliExpress checkout. 7-day free trial." />
+  <meta name="twitter:image" content="https://autoformfiller.xyz/og-image.png" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Address Filler for AliExpress",
+    "applicationCategory": "BrowserApplication",
+    "operatingSystem": "Chrome",
+    "description": "Chrome extension that pastes a copied customer address into the AliExpress checkout form in one click, for dropshippers, virtual assistants and agencies.",
+    "url": "https://autoformfiller.xyz/",
+    "downloadUrl": "https://chromewebstore.google.com/detail/bgbaeelkdofffpjbfpodcgmjjlnbkbjn",
+    "offers": [
+      { "@type": "Offer", "name": "Solo (1 computer)", "price": "9.99", "priceCurrency": "USD" },
+      { "@type": "Offer", "name": "Team (20 computers)", "price": "50", "priceCurrency": "USD" },
+      { "@type": "Offer", "name": "Agency (40 computers)", "price": "90", "priceCurrency": "USD" },
+      { "@type": "Offer", "name": "Agency Plus (100 computers)", "price": "150", "priceCurrency": "USD" }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How do I autofill a shipping address on AliExpress?", "acceptedAnswer": { "@type": "Answer", "text": "Install Address Filler for AliExpress from the Chrome Web Store, copy the customer's address from anywhere, open the AliExpress address form and click the red Paste & Fill button. Name, street, city, postcode, country and phone are filled for you." } },
+      { "@type": "Question", "name": "Does it work with Shopify, eBay, Etsy, TikTok Shop or WooCommerce orders?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. It works from any copied text, so you can copy the address from any store's order page, an email, a spreadsheet or a chat message. No store connection is needed." } },
+      { "@type": "Question", "name": "Can my virtual assistants or team use it?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Team plans cover 20, 40 or 100 computers on one account. Each computer or Chrome profile that signs in uses one seat, and you can free a seat from the extension." } },
+      { "@type": "Question", "name": "Is customer address data sent to your servers?", "acceptedAnswer": { "@type": "Answer", "text": "No. Addresses are read from your clipboard and filled into the page inside your browser. They are never sent to our servers." } },
+      { "@type": "Question", "name": "How much does it cost?", "acceptedAnswer": { "@type": "Answer", "text": "There is a 7-day free trial with no card needed. After that, Solo is $9.99/month for 1 computer, Team is $50/month for 20, Agency is $90/month for 40 and Agency Plus is $150/month for 100. Cancel anytime." } }
+    ]
+  }
+  </script>
+<style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -186,6 +236,7 @@
       font-weight: 800; font-size: 16px; color: var(--red); flex-shrink: 0;
     }
     .step-title { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+    h3.step-title, h3.feature-title, h3.plan-name { margin-top: 0; }
     .step-desc { color: var(--muted); font-size: 14px; }
 
     /* FEATURES */
@@ -304,6 +355,15 @@
       border: none; border-top: 1px solid var(--border);
       max-width: 860px; margin: 0 auto 80px;
     }
+  </style>  <style>
+    .pricing-grid { max-width: 860px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+    .pricing-card { padding: 26px 20px; }
+    .plan-price { font-size: 40px; }
+    .works-with { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 28px; }
+    .works-with span { background: var(--surface2); border: 1px solid var(--border); border-radius: 100px; padding: 5px 12px; font-size: 13px; color: #bbb; }
+    .trial-row { text-align: center; color: var(--muted); font-size: 14px; margin-top: 22px; }
+    .trial-row strong { color: var(--green); }
+    @media (max-width: 480px) { .hero { padding: 64px 16px 56px; } .section, .demo-section { padding-left: 16px; padding-right: 16px; } nav { padding: 0 16px; } }
   </style>
 </head>
 <body>
@@ -312,29 +372,33 @@
 <nav>
   <a href="https://autoformfiller.xyz" class="nav-logo">
     <span>📋</span>
-    AliExpress Address Filler
+    Address Filler
   </a>
-  <a href="https://drive.google.com/uc?export=download&id=1U1Xr5q7tjAnEgVJssm-Kxykp95qRfp8s" target="_blank" class="nav-cta">⬇ Free Trial</a>
+  <a href="https://chromewebstore.google.com/detail/bgbaeelkdofffpjbfpodcgmjjlnbkbjn" target="_blank" rel="noopener" class="nav-cta">Add to Chrome</a>
 </nav>
 
 <!-- HERO -->
-<section class="hero">
-  <div class="badge">7-day free trial — no credit card required</div>
-  <h1>Fill AliExpress forms<br>in <em>one click</em></h1>
+<header class="hero">
+  <div class="badge">7-day free trial · no credit card</div>
+  <h1>AliExpress address autofill<br>in <em>one click</em></h1>
   <p class="hero-sub">
-    Copy any address from an email, eBay order, or spreadsheet — and autofill your entire AliExpress delivery form instantly.
+    Copy a customer's address from any order page, email or spreadsheet. Click <strong>Paste &amp; Fill</strong> on AliExpress. Done. Built for dropshippers, VAs and agencies.
   </p>
   <div class="hero-buttons">
-    <a href="https://drive.google.com/uc?export=download&id=1U1Xr5q7tjAnEgVJssm-Kxykp95qRfp8s" target="_blank" class="btn-primary">⬇ Download Free Trial</a>
+    <a href="https://chromewebstore.google.com/detail/bgbaeelkdofffpjbfpodcgmjjlnbkbjn" target="_blank" rel="noopener" class="btn-primary">Add to Chrome — it's free</a>
     <a href="#how-it-works" class="btn-secondary">How it works</a>
   </div>
   <p class="trial-note">
-    <strong>7 days free</strong>, no credit card required. Then $9.99/month — subscribe from inside the extension.
+    <strong>7 days free</strong>, no card needed. Plans from $9.99/month. Team plans for up to 100 computers.
   </p>
-</section>
+  <div class="works-with" aria-label="Copy addresses from">
+    <span>Shopify</span><span>eBay</span><span>Etsy</span><span>TikTok Shop</span><span>WooCommerce</span><span>Amazon</span><span>Google Sheets</span><span>Email &amp; WhatsApp</span>
+  </div>
+</header>
 
+<main>
 <!-- DEMO -->
-<section class="demo-section">
+<section class="demo-section" aria-label="Example">
   <div class="demo-card">
     <div class="demo-bar">
       <div class="dot dot-r"></div>
@@ -342,21 +406,21 @@
       <div class="dot dot-g"></div>
     </div>
     <div class="demo-content">
-      <div class="demo-box">cristian constantin
-16 Second Avenue
-Forest Town
-Mansfield, Nottinghamshire
-NG19 0BG
+      <div class="demo-box">Jane Smith
+221 Baker Street
+Flat 2
+London
+NW1 6XE
 United Kingdom
-+44 7818 330060</div>
++44 7700 900123</div>
       <div class="demo-arrow">→</div>
       <div class="form-mock">
-        <div class="form-field"><label>First name</label><div class="val">Cristian</div></div>
-        <div class="form-field"><label>Last name</label><div class="val">Constantin</div></div>
-        <div class="form-field"><label>Address</label><div class="val">16 Second Avenue</div></div>
-        <div class="form-field"><label>City</label><div class="val">Mansfield</div></div>
-        <div class="form-field"><label>Postcode</label><div class="val">NG19 0BG</div></div>
-        <div class="fill-btn-mock">📋 Fill address</div>
+        <div class="form-field"><label>First name</label><div class="val">Jane</div></div>
+        <div class="form-field"><label>Last name</label><div class="val">Smith</div></div>
+        <div class="form-field"><label>Street address</label><div class="val">221 Baker Street</div></div>
+        <div class="form-field"><label>City</label><div class="val">London</div></div>
+        <div class="form-field"><label>Postcode</label><div class="val">NW1 6XE</div></div>
+        <div class="fill-btn-mock">📋 Paste &amp; Fill</div>
       </div>
     </div>
   </div>
@@ -365,41 +429,34 @@ United Kingdom
 <!-- HOW IT WORKS -->
 <section class="section" id="how-it-works">
   <div class="section-label">How it works</div>
-  <h2>Up and running in 5 minutes</h2>
+  <h2>Fill an AliExpress order in under 5 seconds</h2>
   <div class="steps">
     <div class="step">
       <div class="step-num">1</div>
       <div>
-        <div class="step-title">Download &amp; install the extension</div>
-        <div class="step-desc">Download the zip, open <code>chrome://extensions</code>, enable Developer Mode, and click "Load unpacked". Takes about 2 minutes.</div>
+        <h3 class="step-title">Add the extension to Chrome</h3>
+        <p class="step-desc">Install Address Filler for AliExpress from the Chrome Web Store in one click. Works in Chrome, Edge and Brave.</p>
       </div>
     </div>
     <div class="step">
       <div class="step-num">2</div>
       <div>
-        <div class="step-title">Create your free account</div>
-        <div class="step-desc">Click the extension icon. Enter your email and password. We'll send a 6-digit verification code to your inbox — enter it to confirm your account.</div>
+        <h3 class="step-title">Create your free account</h3>
+        <p class="step-desc">Click the extension icon, sign up with your email and enter the 6-digit code. Your 7-day free trial starts right away. No card needed.</p>
       </div>
     </div>
     <div class="step">
       <div class="step-num">3</div>
       <div>
-        <div class="step-title">Your 7-day trial starts immediately</div>
-        <div class="step-desc">No credit card needed to start. You get full access for 7 days to try every feature.</div>
+        <h3 class="step-title">Copy the customer's address</h3>
+        <p class="step-desc">From a Shopify, eBay, Etsy or TikTok Shop order, an email, a spreadsheet row or a WhatsApp message. Multi-line or one line, both work.</p>
       </div>
     </div>
     <div class="step">
       <div class="step-num">4</div>
       <div>
-        <div class="step-title">Copy an address and fill the form</div>
-        <div class="step-desc">Copy any address, go to AliExpress checkout, and click the red <strong>📋 Fill address</strong> button. All fields fill instantly.</div>
-      </div>
-    </div>
-    <div class="step">
-      <div class="step-num">5</div>
-      <div>
-        <div class="step-title">Subscribe to keep access</div>
-        <div class="step-desc">After the trial, subscribe for $9.99/month directly from the extension popup. Manage or cancel your subscription anytime.</div>
+        <h3 class="step-title">Click Paste &amp; Fill on AliExpress</h3>
+        <p class="step-desc">Check the address in the preview box, click <strong>Fill Form</strong>, and name, street, city, postcode, country and phone code are filled for you.</p>
       </div>
     </div>
   </div>
@@ -408,39 +465,39 @@ United Kingdom
 <hr class="divider" />
 
 <!-- FEATURES -->
-<section class="section">
+<section class="section" id="features">
   <div class="section-label">Features</div>
-  <h2>Everything you need, nothing you don't</h2>
+  <h2>Made for dropshipping order fulfillment</h2>
   <div class="features">
     <div class="feature">
       <div class="feature-icon">⚡</div>
-      <div class="feature-title">One-click fill</div>
-      <div class="feature-desc">Fills name, address, city, postcode, country, and phone code all at once.</div>
+      <h3 class="feature-title">One-click address autofill</h3>
+      <p class="feature-desc">Fills first and last name, street, apartment, city, county/state, postcode/ZIP and mobile number at once.</p>
     </div>
     <div class="feature">
       <div class="feature-icon">🌍</div>
-      <div class="feature-title">UK, US &amp; EU addresses</div>
-      <div class="feature-desc">Full UK support. Best-effort US and EU address parsing out of the box.</div>
+      <h3 class="feature-title">Country &amp; phone code picked for you</h3>
+      <p class="feature-desc">Selects the country and phone country code dropdowns automatically, with a one-click retry if AliExpress is slow.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔗</div>
+      <h3 class="feature-title">Works with any store</h3>
+      <p class="feature-desc">No Shopify or eBay connection needed. If you can copy the address, you can fill it.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">👥</div>
+      <h3 class="feature-title">Team seats for VAs &amp; agencies</h3>
+      <p class="feature-desc">One account for your whole team: 20, 40 or 100 computers. Free up a seat from the extension anytime.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">✏️</div>
+      <h3 class="feature-title">Preview before filling</h3>
+      <p class="feature-desc">Edit the address in a small panel before it goes into the form, so mistakes don't reach your supplier.</p>
     </div>
     <div class="feature">
       <div class="feature-icon">🔒</div>
-      <div class="feature-title">Privacy first</div>
-      <div class="feature-desc">Your clipboard is never sent anywhere. Everything stays local in your browser.</div>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">📍</div>
-      <div class="feature-title">Adjustable button position</div>
-      <div class="feature-desc">Move the fill button to any corner: top-right, top-left, bottom-right, or bottom-left.</div>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">🎯</div>
-      <div class="feature-title">React-aware form filling</div>
-      <div class="feature-desc">Triggers React's own events so fields stay filled and don't reset after input.</div>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">🛒</div>
-      <div class="feature-title">Works on all AliExpress regions</div>
-      <div class="feature-desc">Supports aliexpress.com and aliexpress.us. Works on checkout and address book pages.</div>
+      <h3 class="feature-title">Customer data stays private</h3>
+      <p class="feature-desc">Addresses are processed only in your browser and never sent to our servers.</p>
     </div>
   </div>
 </section>
@@ -450,34 +507,55 @@ United Kingdom
 <!-- PRICING -->
 <section class="section" id="pricing">
   <div class="section-label">Pricing</div>
-  <h2>Start free, subscribe when you're ready</h2>
+  <h2>Simple plans for solo sellers and agencies</h2>
   <div class="pricing-grid">
     <div class="pricing-card">
-      <div class="plan-name">Free Trial</div>
-      <div class="plan-price">$0</div>
-      <div class="plan-period">7 days · no credit card</div>
+      <h3 class="plan-name">Solo</h3>
+      <div class="plan-price"><sup>$</sup>9.99</div>
+      <div class="plan-period">per month · 1 computer</div>
       <ul class="plan-perks">
-        <li>Full access to all features</li>
-        <li>7-day trial period</li>
-        <li>Email account required</li>
-        <li>No payment details needed</li>
+        <li>Unlimited address fills</li>
+        <li>All features</li>
+        <li>Cancel anytime</li>
       </ul>
-      <a href="https://drive.google.com/uc?export=download&id=1U1Xr5q7tjAnEgVJssm-Kxykp95qRfp8s" target="_blank" class="btn-plan">⬇ Download &amp; Start Free</a>
+      <a href="https://chromewebstore.google.com/detail/bgbaeelkdofffpjbfpodcgmjjlnbkbjn" target="_blank" rel="noopener" class="btn-plan outline">Start free trial</a>
     </div>
     <div class="pricing-card featured">
-      <div class="plan-badge">After trial</div>
-      <div class="plan-name">Monthly</div>
-      <div class="plan-price"><sup>$</sup>9.99</div>
-      <div class="plan-period">per month · cancel anytime</div>
+      <div class="plan-badge">Most popular</div>
+      <h3 class="plan-name">Team</h3>
+      <div class="plan-price"><sup>$</sup>50</div>
+      <div class="plan-period">per month · 20 computers</div>
       <ul class="plan-perks">
-        <li>Everything in the free trial</li>
-        <li>Uninterrupted access</li>
-        <li>All future updates</li>
-        <li>Manage or cancel anytime</li>
+        <li>$2.50 per computer</li>
+        <li>One shared account</li>
+        <li>Manage seats in the extension</li>
       </ul>
-      <div class="btn-plan btn-plan-info">Subscribe inside the extension →</div>
+      <a href="https://chromewebstore.google.com/detail/bgbaeelkdofffpjbfpodcgmjjlnbkbjn" target="_blank" rel="noopener" class="btn-plan">Start free trial</a>
+    </div>
+    <div class="pricing-card">
+      <h3 class="plan-name">Agency</h3>
+      <div class="plan-price"><sup>$</sup>90</div>
+      <div class="plan-period">per month · 40 computers</div>
+      <ul class="plan-perks">
+        <li>$2.25 per computer</li>
+        <li>For VA teams</li>
+        <li>Switch plans anytime</li>
+      </ul>
+      <a href="https://chromewebstore.google.com/detail/bgbaeelkdofffpjbfpodcgmjjlnbkbjn" target="_blank" rel="noopener" class="btn-plan outline">Start free trial</a>
+    </div>
+    <div class="pricing-card">
+      <h3 class="plan-name">Agency Plus</h3>
+      <div class="plan-price"><sup>$</sup>150</div>
+      <div class="plan-period">per month · 100 computers</div>
+      <ul class="plan-perks">
+        <li>$1.50 per computer</li>
+        <li>For large fulfillment teams</li>
+        <li>Email support</li>
+      </ul>
+      <a href="https://chromewebstore.google.com/detail/bgbaeelkdofffpjbfpodcgmjjlnbkbjn" target="_blank" rel="noopener" class="btn-plan outline">Start free trial</a>
     </div>
   </div>
+  <p class="trial-row">Every plan starts with a <strong>7-day free trial</strong>. Pick your plan inside the extension. Secure checkout by Stripe.</p>
 </section>
 
 <hr class="divider" />
@@ -485,91 +563,62 @@ United Kingdom
 <!-- FAQ -->
 <section class="section" id="faq">
   <div class="section-label">FAQ</div>
-  <h2>Common questions</h2>
+  <h2>Frequently asked questions</h2>
   <div class="faq">
     <div class="faq-item">
-      <button class="faq-q" onclick="toggle(this)">
-        Do I need to create an account?
-        <span class="faq-icon">+</span>
-      </button>
-      <div class="faq-a">
-        Yes. When you first open the extension, you'll sign up with your email and password. We'll send a 6-digit code to your inbox to verify your email. Once confirmed, your 7-day free trial starts automatically.
-      </div>
+      <button class="faq-q" onclick="toggle(this)">How do I autofill a shipping address on AliExpress?<span class="faq-icon">+</span></button>
+      <div class="faq-a">Install Address Filler for AliExpress from the Chrome Web Store, copy the customer's address from anywhere, open the AliExpress address form and click the red <strong>Paste &amp; Fill</strong> button. Name, street, city, postcode, country and phone are filled for you.</div>
     </div>
     <div class="faq-item">
-      <button class="faq-q" onclick="toggle(this)">
-        Do I need a credit card for the trial?
-        <span class="faq-icon">+</span>
-      </button>
-      <div class="faq-a">
-        No. The 7-day free trial starts the moment you verify your email — no payment details needed. You only subscribe when you're ready, directly from the extension popup.
-      </div>
+      <button class="faq-q" onclick="toggle(this)">Does it work with Shopify, eBay, Etsy, TikTok Shop or WooCommerce orders?<span class="faq-icon">+</span></button>
+      <div class="faq-a">Yes. It works from any copied text, so you can copy the address from any store's order page, an email, a spreadsheet or a chat message. No store connection is needed.</div>
     </div>
     <div class="faq-item">
-      <button class="faq-q" onclick="toggle(this)">
-        How do I get the extension?
-        <span class="faq-icon">+</span>
-      </button>
-      <div class="faq-a">
-        Download the zip file from the link above, then install it manually: open <code>chrome://extensions</code>, toggle on Developer Mode, click "Load unpacked", and select the unzipped folder. Takes about 2 minutes.
-      </div>
+      <button class="faq-q" onclick="toggle(this)">Can my virtual assistants or team use it?<span class="faq-icon">+</span></button>
+      <div class="faq-a">Yes. Team plans cover 20, 40 or 100 computers on one account. Each computer (Chrome profile) that signs in uses one seat, and you can free a seat from the extension under "Manage computers".</div>
     </div>
     <div class="faq-item">
-      <button class="faq-q" onclick="toggle(this)">
-        What happens when my trial ends?
-        <span class="faq-icon">+</span>
-      </button>
-      <div class="faq-a">
-        The extension will show a screen prompting you to subscribe. Click "Subscribe — $9.99/mo" inside the popup, complete the payment on Stripe, and your access is restored immediately.
-      </div>
+      <button class="faq-q" onclick="toggle(this)">Do I need a credit card for the free trial?<span class="faq-icon">+</span></button>
+      <div class="faq-a">No. The 7-day free trial starts when you verify your email. You only pay when you pick a plan inside the extension.</div>
     </div>
     <div class="faq-item">
-      <button class="faq-q" onclick="toggle(this)">
-        Can I cancel my subscription?
-        <span class="faq-icon">+</span>
-      </button>
-      <div class="faq-a">
-        Yes, anytime. Click "Manage Subscription" inside the extension popup and you'll be taken to the Stripe customer portal where you can cancel or update your payment method.
-      </div>
+      <button class="faq-q" onclick="toggle(this)">What happens when my trial ends?<span class="faq-icon">+</span></button>
+      <div class="faq-a">The extension asks you to choose a plan. Click <strong>See plans</strong>, pay securely with Stripe, and filling works again straight away.</div>
     </div>
     <div class="faq-item">
-      <button class="faq-q" onclick="toggle(this)">
-        What address formats are supported?
-        <span class="faq-icon">+</span>
-      </button>
-      <div class="faq-a">
-        UK addresses are fully supported. US and EU addresses are handled on a best-effort basis. The parser extracts: first/last name, street, city, county/state, postcode/zip, country, and phone number with country code.
-      </div>
+      <button class="faq-q" onclick="toggle(this)">How do I upgrade, change or cancel my plan?<span class="faq-icon">+</span></button>
+      <div class="faq-a">Open the extension and click <strong>Change plan / billing</strong>. You can switch between Solo, Team, Agency and Agency Plus, update your card, download invoices or cancel anytime.</div>
     </div>
     <div class="faq-item">
-      <button class="faq-q" onclick="toggle(this)">
-        Is my address data sent anywhere?
-        <span class="faq-icon">+</span>
-      </button>
-      <div class="faq-a">
-        No. The extension reads your clipboard locally and fills the form directly in your browser. Address data is never transmitted to any server.
-      </div>
+      <button class="faq-q" onclick="toggle(this)">Which address formats work?<span class="faq-icon">+</span></button>
+      <div class="faq-a">UK addresses are fully supported, and US and EU addresses work well in most cases. You can always edit the address in the preview box before filling.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggle(this)">Is customer address data sent to your servers?<span class="faq-icon">+</span></button>
+      <div class="faq-a">No. Addresses are read from your clipboard only when you click the button and are filled inside your browser. See our <a href="/privacy.html">privacy policy</a>.</div>
     </div>
   </div>
 </section>
+</main>
 
 <!-- CTA -->
 <section class="cta-section">
-  <h2>Try it free for 7 days</h2>
-  <p>No credit card needed. Full access from day one.</p>
+  <h2>Stop typing addresses into AliExpress</h2>
+  <p>Try it free for 7 days. No credit card needed.</p>
   <div class="hero-buttons">
-    <a href="https://drive.google.com/uc?export=download&id=1U1Xr5q7tjAnEgVJssm-Kxykp95qRfp8s" target="_blank" class="btn-primary">⬇ Download Free Trial</a>
+    <a href="https://chromewebstore.google.com/detail/bgbaeelkdofffpjbfpodcgmjjlnbkbjn" target="_blank" rel="noopener" class="btn-primary">Add to Chrome — it's free</a>
   </div>
 </section>
 
 <!-- FOOTER -->
 <footer>
   <p>
-    &copy; 2026 AliExpress Address Filler &nbsp;·&nbsp;
-    <a href="https://github.com/mahedi-tarek/aliexpress-auto-form-filler" target="_blank">GitHub</a>
+    &copy; 2026 Address Filler for AliExpress &nbsp;·&nbsp;
+    <a href="/privacy.html">Privacy policy</a>
     &nbsp;·&nbsp;
     Questions? <a href="mailto:mhtareqarz@gmail.com">mhtareqarz@gmail.com</a>
   </p>
+  <p style="margin-top:8px;font-size:12px">Address Filler is an independent tool and is not affiliated with AliExpress or Alibaba Group.</p>
 </footer>
 
 <script>

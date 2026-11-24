@@ -57,7 +57,7 @@ function showPaywall() {
       body = 'Click the <strong>Address Filler</strong> icon in your Chrome toolbar to create a free account and start your <strong>7-day free trial</strong>.<br><span style="font-size:11px;color:#aaa;">Plans from $9.99/month — cancel anytime.</span>';
       btnLabel = 'Open Address Filler';
       action = 'popup';
-    } else if (status && (status.reason === 'trial_expired' || status.reason === 'trial_used')) {
+    } else if (status && (status.reason === 'trial_expired' || status.reason === 'trial_used' || status.reason === 'trial_unavailable')) {
       title = status.reason === 'trial_used' ? 'Free trial already used' : 'Your free trial has ended';
       body = status.reason === 'trial_used'
         ? 'A free trial was already used on this computer. Subscribe to keep autofilling addresses.'

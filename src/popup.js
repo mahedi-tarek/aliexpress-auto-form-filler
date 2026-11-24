@@ -211,6 +211,7 @@ function renderStatus(status) {
   const messages = {
     trial_expired: 'Your 7-day free trial has ended.',
     trial_used: 'A free trial was already used on this computer. Subscribe to continue.',
+    trial_unavailable: 'Too many free trials were started from this network recently. Choose a plan to continue, or try again from another network.',
     update_required: 'Please update the extension to the latest version.',
     cancelled: 'Your subscription has been cancelled.',
     payment_failed: 'Payment failed. Update your card to restore access.',

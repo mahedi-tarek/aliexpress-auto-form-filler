@@ -31,13 +31,16 @@ function seatLimit(profile, env) {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
-// SHA-256 of the client IP with a server-side salt. Only the hash is stored.
+// HMAC-SHA-256 of the client IP keyed with the IP_HASH_SALT secret. Only the
+// hash is stored. Without the secret the network throttle is simply skipped.
 async function hashIp(request, env) {
   const ip = request.headers.get('CF-Connecting-IP');
-  if (!ip) return null;
-  const salt = env.IP_HASH_SALT || env.SUPABASE_URL || '';
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${salt}|${ip}`));
-  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+  if (!ip || !env.IP_HASH_SALT) return null;
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(env.IP_HASH_SALT), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(ip));
+  return Array.from(new Uint8Array(mac)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 function validDeviceId(id) {
@@ -151,18 +154,24 @@ export async function handleAuthVerify(request, env) {
       // One trial per install: if another account already used a trial on this
       // device, this account gets no trial (it can still subscribe).
       const claimedBy = await getTrialClaim(deviceId, env);
-      let trialBlocked = claimedBy && claimedBy !== profile.id;
       let ipHash = null;
-      if (!claimedBy && !trialBlocked && now < trialEnd) {
+      let networkLimited = false;
+      if (!claimedBy && now < trialEnd) {
         // New install starting a trial: also cap trials per network so
         // reinstalling with fresh emails doesn't give unlimited free use.
+        // Nothing is written when this trips (a shared office IP must not
+        // permanently burn someone's trial); the user can still subscribe.
         ipHash = await hashIp(request, env);
-        const since = new Date(Date.now() - TRIAL_IP_WINDOW_DAYS * DAY_MS).toISOString();
-        if (await countRecentTrialsFromIp(ipHash, since, env) >= TRIALS_PER_IP) trialBlocked = true;
+        if (ipHash) {
+          const since = new Date(Date.now() - TRIAL_IP_WINDOW_DAYS * DAY_MS).toISOString();
+          networkLimited = await countRecentTrialsFromIp(ipHash, since, env) >= TRIALS_PER_IP;
+        }
       }
-      if (trialBlocked) {
+      if (claimedBy && claimedBy !== profile.id) {
         await updateProfile(profile.id, { subscription_status: 'expired', trial_ends_at: now.toISOString() }, env);
         decision = { ...base, allowed: false, reason: 'trial_used' };
+      } else if (networkLimited) {
+        decision = { ...base, allowed: false, reason: 'trial_unavailable' };
       } else if (now < trialEnd) {
         if (!claimedBy) await claimTrialDevice(deviceId, profile.id, ipHash, env);
         const daysLeft = Math.ceil((trialEnd - now) / DAY_MS);
