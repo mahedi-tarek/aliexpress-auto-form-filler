@@ -1,0 +1,20 @@
+{
+  "name": "address-filler-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "secret:stripe": "wrangler secret put STRIPE_SECRET_KEY",
+    "secret:webhook": "wrangler secret put STRIPE_WEBHOOK_SECRET",
+    "secret:resend": "wrangler secret put RESEND_API_KEY",
+    "secret:supabase": "wrangler secret put SUPABASE_SERVICE_KEY",
+    "test": "node test/e2e.test.mjs",
+    "secret:status-key": "wrangler secret put STATUS_PRIVATE_KEY < ../.secrets/status-private.jwk.json",
+    "secret:extension-id": "wrangler secret put EXTENSION_ID"
+  },
+  "devDependencies": {
+    "wrangler": "^4.87.0"
+  },
+  "type": "module"
+}

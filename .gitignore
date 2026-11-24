@@ -3,3 +3,11 @@ dist/
 .env
 .DS_Store
 icons/.DS_Store
+.secrets/
+*.zip
+store/*.zip
+.playwright-mcp/
+store/raw/
+backend/.wrangler/
+backend/node_modules/
+.claude/

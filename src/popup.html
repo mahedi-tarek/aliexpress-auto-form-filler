@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AliExpress Address Filler</title>
+  <title>Address Filler for AliExpress</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -64,6 +64,7 @@
       <div class="status-badge trial">Free Trial</div>
       <p id="trial-days" class="trial-days-text"></p>
       <p id="trial-email" class="info"></p>
+      <p id="trial-devices" class="device-count"></p>
       <p class="hint">Copy an address, then click the red button on AliExpress to fill the form.</p>
       <hr>
       <div class="setting-row">
@@ -83,6 +84,7 @@
     <div id="screen-subscribed" class="screen" hidden>
       <div class="status-badge active">Active</div>
       <p id="subscribed-email" class="info"></p>
+      <p id="subscribed-devices" class="device-count"></p>
       <p class="hint">Copy an address, then click the red button on AliExpress to fill the form.</p>
       <hr>
       <div class="setting-row">
@@ -104,6 +106,16 @@
       <p id="expired-reason" class="info"></p>
       <button id="btn-subscribe-expired" class="btn primary">Subscribe — $9.99/mo</button>
       <button id="btn-signout-expired" class="btn text">Sign Out</button>
+    </div>
+
+    <!-- Screen: Device limit reached -->
+    <div id="screen-devicelimit" class="screen" hidden>
+      <div class="status-badge expired">Device Limit Reached</div>
+      <p id="devicelimit-intro" class="hint"></p>
+      <div id="devicelimit-list" class="device-list"></div>
+      <div id="devicelimit-error" class="error" hidden></div>
+      <button id="btn-devicelimit-retry" class="btn primary">Retry on This Computer</button>
+      <button id="btn-signout-devicelimit" class="btn text">Sign Out</button>
     </div>
 
     <!-- Loading overlay (shown during async operations within a screen) -->

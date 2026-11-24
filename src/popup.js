@@ -1,8 +1,29 @@
-import { signUp, signIn, sendPasswordReset, verifySignupOtp, resendSignupOtp, tryRefreshToken } from './auth.js';
+import { signUp, signIn, sendPasswordReset, verifySignupOtp, resendSignupOtp, tryRefreshToken, signOutRemote } from './auth.js';
+import { getDeviceId, getDeviceLabel } from './device.js';
 
-// API_BASE and PAYMENT_LINK are injected at build time by webpack DefinePlugin.
-const API_BASE     = process.env.API_BASE;
-const PAYMENT_LINK = process.env.PAYMENT_LINK;
+// API_BASE is injected at build time by webpack DefinePlugin.
+const API_BASE = process.env.API_BASE;
+
+// Keys that survive sign-out: the install's device id (so signing back in on
+// the same computer doesn't count as a new device) and UI preferences.
+const PERSISTENT_KEYS = ['deviceId', 'buttonPosition'];
+
+async function clearSession(extraKeep = []) {
+  const keep = await chrome.storage.local.get([...PERSISTENT_KEYS, ...extraKeep]);
+  await chrome.storage.local.clear();
+  await chrome.storage.local.set(keep);
+}
+
+// POST /auth/verify with this install's device identity attached.
+async function verifyRequest(jwt) {
+  const deviceId = await getDeviceId();
+  const deviceLabel = getDeviceLabel();
+  return fetchWithTimeout(`${API_BASE}/auth/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jwt, deviceId, deviceLabel }),
+  });
+}
 
 const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
@@ -23,7 +44,7 @@ function syncPositionSelects(pos) {
 
 // ── Screen management ──────────────────────────────────────────────────────
 
-const SCREENS = ['loading', 'auth', 'otp', 'trial', 'subscribed', 'expired'];
+const SCREENS = ['loading', 'auth', 'otp', 'trial', 'subscribed', 'expired', 'devicelimit'];
 
 function showScreen(name) {
   SCREENS.forEach(s => {
@@ -142,21 +163,25 @@ function showOtpScreen(email) {
 
 // ── Render status to correct screen ───────────────────────────────────────
 
+function deviceCountText(status) {
+  if (typeof status.deviceCount !== 'number' || typeof status.deviceLimit !== 'number') return '';
+  return `Devices: ${status.deviceCount} / ${status.deviceLimit}`;
+}
+
 function renderStatus(status) {
-  const { allowed, reason, trialDaysLeft, email, portalUrl } = status;
+  const { allowed, reason, trialDaysLeft, email } = status;
 
   if (allowed && reason === 'subscribed') {
     $('subscribed-email').textContent = email || '';
-    $('btn-manage').onclick = () => {
-      if (portalUrl) chrome.tabs.create({ url: portalUrl });
-      else openPaymentLink();
-    };
+    $('subscribed-devices').textContent = deviceCountText(status);
+    $('btn-manage').onclick = openBillingPortal;
     showScreen('subscribed');
     return;
   }
 
   if (allowed && (reason === 'trial' || reason === 'grace_period')) {
     $('trial-email').textContent = email || '';
+    $('trial-devices').textContent = deviceCountText(status);
     if (reason === 'trial') {
       $('trial-days').textContent =
         `${trialDaysLeft} day${trialDaysLeft !== 1 ? 's' : ''} left in your free trial`;
@@ -167,9 +192,18 @@ function renderStatus(status) {
     return;
   }
 
+  // Too many devices — offer the self-service manage/remove screen instead of
+  // the generic "access ended" one.
+  if (reason === 'device_limit') {
+    showDeviceLimitScreen(status);
+    return;
+  }
+
   // Blocked
   const messages = {
     trial_expired: 'Your 7-day free trial has ended.',
+    trial_used: 'A free trial was already used on this computer. Subscribe to continue.',
+    update_required: 'Please update the extension to the latest version.',
     cancelled: 'Your subscription has been cancelled.',
     payment_failed: 'Payment failed. Update your card to restore access.',
     expired: 'Your access has expired.',
@@ -178,6 +212,135 @@ function renderStatus(status) {
   $('expired-reason').textContent = messages[reason] || messages.unknown;
   showScreen('expired');
 }
+
+// ── Device limit / management ──────────────────────────────────────────────
+
+function timeAgo(iso) {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+async function showDeviceLimitScreen(status) {
+  const limit = status?.deviceLimit;
+  $('devicelimit-intro').textContent = limit
+    ? `Your plan allows ${limit} device${limit !== 1 ? 's' : ''}. Remove one below to use this computer instead, then tap Retry.`
+    : 'Remove a device below to use this computer instead, then tap Retry.';
+  $('devicelimit-error').hidden = true;
+  showScreen('devicelimit');
+  await loadDeviceList();
+}
+
+async function loadDeviceList() {
+  const listEl = $('devicelimit-list');
+  listEl.innerHTML = '<div class="device-loading">Loading your devices…</div>';
+
+  const { accessToken } = await chrome.storage.local.get('accessToken');
+  const deviceId = await getDeviceId();
+
+  let data;
+  try {
+    const res = await fetchWithTimeout(`${API_BASE}/devices?current=${encodeURIComponent(deviceId)}`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+    data = await res.json();
+  } catch {
+    listEl.innerHTML = '<div class="device-loading">Couldn\'t load devices. Check your connection.</div>';
+    return;
+  }
+
+  const devices = data?.devices || [];
+  if (!devices.length) {
+    listEl.innerHTML = '<div class="device-loading">No devices registered.</div>';
+    return;
+  }
+
+  listEl.innerHTML = '';
+  devices.forEach((d) => {
+    const row = document.createElement('div');
+    row.className = 'device-row';
+
+    const info = document.createElement('div');
+    info.className = 'device-info';
+    const name = document.createElement('div');
+    name.className = 'device-name';
+    name.textContent = (d.label || 'Unknown device') + (d.isCurrent ? ' (this computer)' : '');
+    const meta = document.createElement('div');
+    meta.className = 'device-meta';
+    meta.textContent = `Last active ${timeAgo(d.lastSeen)}`;
+    info.appendChild(name);
+    info.appendChild(meta);
+
+    const btn = document.createElement('button');
+    btn.className = 'btn danger device-remove';
+    btn.textContent = 'Remove';
+    btn.onclick = () => removeDevice(d.deviceId, btn);
+
+    row.appendChild(info);
+    row.appendChild(btn);
+    listEl.appendChild(row);
+  });
+}
+
+async function removeDevice(deviceId, btn) {
+  const errEl = $('devicelimit-error');
+  errEl.hidden = true;
+  btn.disabled = true;
+  btn.textContent = 'Removing…';
+
+  const { accessToken } = await chrome.storage.local.get('accessToken');
+  let result;
+  try {
+    const res = await fetchWithTimeout(`${API_BASE}/devices/remove`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jwt: accessToken, deviceId }),
+    });
+    result = await res.json().catch(() => ({}));
+    result.__status = res.status;
+  } catch {
+    btn.disabled = false;
+    btn.textContent = 'Remove';
+    errEl.textContent = 'Connection failed. Try again.';
+    errEl.hidden = false;
+    return;
+  }
+
+  if (result.__status === 429 && result.error === 'cooldown') {
+    btn.disabled = false;
+    btn.textContent = 'Remove';
+    errEl.textContent = `You can only switch devices once in a while. Try again in about ${result.retryAfterHours}h.`;
+    errEl.hidden = false;
+    return;
+  }
+
+  if (!result.success) {
+    btn.disabled = false;
+    btn.textContent = 'Remove';
+    errEl.textContent = 'Could not remove that device. Please try again.';
+    errEl.hidden = false;
+    return;
+  }
+
+  // Slot freed — re-verify so this computer registers and gains access.
+  showOverlay(true);
+  const { refreshToken } = await chrome.storage.local.get('refreshToken');
+  await verifyAndRender(accessToken, refreshToken);
+  showOverlay(false);
+}
+
+$('btn-devicelimit-retry').addEventListener('click', async () => {
+  showOverlay(true);
+  const { accessToken, refreshToken } = await chrome.storage.local.get(['accessToken', 'refreshToken']);
+  await verifyAndRender(accessToken, refreshToken);
+  showOverlay(false);
+});
 
 // ── Main init ──────────────────────────────────────────────────────────────
 
@@ -202,13 +365,14 @@ async function init() {
     return;
   }
 
-  // Use cached status if still fresh
+  // Show cached status instantly if fresh. Subscribers stay on the cache;
+  // everyone else is re-checked right away so a just-completed payment or an
+  // ended trial shows up as soon as the popup opens.
   if (stored.authStatus && Date.now() < stored.authStatus.expiresAt) {
     renderStatus(stored.authStatus);
-    return;
+    if (stored.authStatus.reason === 'subscribed') return;
   }
 
-  // Re-verify with backend
   await verifyAndRender(stored.accessToken, stored.refreshToken);
 }
 
@@ -217,11 +381,7 @@ async function verifyAndRender(accessToken, refreshToken) {
     let status;
 
     try {
-      const res = await fetchWithTimeout(`${API_BASE}/auth/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jwt: accessToken }),
-      });
+      const res = await verifyRequest(accessToken);
 
       if (res.status === 401) {
         // Try refreshing the token
@@ -230,9 +390,8 @@ async function verifyAndRender(accessToken, refreshToken) {
           // Preserve pendingOtpEmail across the wipe — never strand a user
           // mid-verification just because a stale token expired.
           const { pendingOtpEmail } = await chrome.storage.local.get('pendingOtpEmail');
-          await chrome.storage.local.clear();
+          await clearSession(['pendingOtpEmail']);
           if (pendingOtpEmail) {
-            await chrome.storage.local.set({ pendingOtpEmail });
             showOtpScreen(pendingOtpEmail);
           } else {
             showScreen('auth');
@@ -240,11 +399,7 @@ async function verifyAndRender(accessToken, refreshToken) {
           }
           return;
         }
-        const res2 = await fetchWithTimeout(`${API_BASE}/auth/verify`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jwt: newToken }),
-        });
+        const res2 = await verifyRequest(newToken);
         status = await res2.json();
       } else {
         status = await res.json();
@@ -497,11 +652,7 @@ $('btn-verify').addEventListener('click', async () => {
   // Try to fetch real status from the backend. On any failure, keep the
   // optimistic trial state we just cached so the user remains logged in.
   try {
-    const res = await fetch(`${API_BASE}/auth/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jwt: result.access_token }),
-    });
+    const res = await verifyRequest(result.access_token);
     if (res.ok) {
       const status = await res.json();
       await chrome.storage.local.set({
@@ -566,12 +717,33 @@ $('login-password').addEventListener('keydown', (e) => {
 
 // ── Subscribe buttons ──────────────────────────────────────────────────────
 
-async function openPaymentLink() {
-  const { userEmail } = await chrome.storage.local.get('userEmail');
-  const url = userEmail
-    ? `${PAYMENT_LINK}?prefilled_email=${encodeURIComponent(userEmail)}`
-    : PAYMENT_LINK;
-  chrome.tabs.create({ url });
+// Checkout is opened by the background worker so it can attach this account's
+// id (client_reference_id) — that's how the payment gets linked to the account
+// even if a different email is typed at checkout.
+function openPaymentLink() {
+  chrome.runtime.sendMessage({ type: 'OPEN_CHECKOUT' });
+}
+
+async function openBillingPortal() {
+  showOverlay(true);
+  try {
+    const { accessToken } = await chrome.storage.local.get('accessToken');
+    const res = await fetchWithTimeout(`${API_BASE}/billing/portal`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jwt: accessToken }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data.url) {
+      chrome.tabs.create({ url: data.url });
+    } else {
+      $('subscribed-email').textContent = 'Could not open billing. Please try again or email support.';
+    }
+  } catch {
+    $('subscribed-email').textContent = 'Connection failed. Check your internet and try again.';
+  } finally {
+    showOverlay(false);
+  }
 }
 
 $('btn-subscribe-trial').addEventListener('click', openPaymentLink);
@@ -580,7 +752,11 @@ $('btn-subscribe-expired').addEventListener('click', openPaymentLink);
 // ── Sign out ───────────────────────────────────────────────────────────────
 
 async function signOut() {
-  await chrome.storage.local.clear();
+  showOverlay(true);
+  const { accessToken } = await chrome.storage.local.get('accessToken');
+  await signOutRemote(accessToken);
+  await clearSession();
+  showOverlay(false);
   showScreen('auth');
   switchTab('login');
 }
@@ -588,6 +764,7 @@ async function signOut() {
 $('btn-signout-trial').addEventListener('click', signOut);
 $('btn-signout-sub').addEventListener('click', signOut);
 $('btn-signout-expired').addEventListener('click', signOut);
+$('btn-signout-devicelimit').addEventListener('click', signOut);
 
 // ── Button position selector ───────────────────────────────────────────────
 

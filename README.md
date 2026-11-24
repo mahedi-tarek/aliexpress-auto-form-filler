@@ -4,11 +4,14 @@ Autofills the AliExpress delivery form from an address you've copied to your cli
 
 ## How to install
 
-1. Open Chrome and go to `chrome://extensions`
-2. Enable **Developer mode** (toggle in top-right)
-3. Click **Load unpacked**
-4. Select the `AliExpress-Address-Filler` folder
-5. Done — the extension is now active
+**[⬇️ Download the extension](https://drive.google.com/file/d/1c77B1VBpH0pFZpoJMwR99_pK6hBJqwXo/view?usp=sharing)**
+
+1. Download and unzip the file from the link above
+2. Open Chrome and go to `chrome://extensions`
+3. Enable **Developer mode** (toggle in top-right)
+4. Click **Load unpacked**
+5. Select the unzipped `AliExpress-Address-Filler` folder
+6. Done — the extension is now active
 
 ## How to use
 

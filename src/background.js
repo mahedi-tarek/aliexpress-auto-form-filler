@@ -1,56 +1,42 @@
-// TODO: Replace with your actual Cloudflare Worker URL after deployment
-const API_BASE = 'https://address-filler-api.mhtareqarz.workers.dev';
-// TODO: Replace with your Supabase project URL and anon key
-const SUPABASE_URL = 'https://tahjkdlttlxgqhoxjqxd.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhaGprZGx0dGx4Z3Fob3hqcXhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTk2MjAsImV4cCI6MjA5MzMzNTYyMH0.7k1XKp2g6iOzetJZZWTI-Gqh1okTwJumWLkLgNpw2c8';
+// API_BASE / PAYMENT_LINK are injected at build time by webpack DefinePlugin.
+import { tryRefreshToken } from './auth.js';
+import { getDeviceId, getDeviceLabel } from './device.js';
+
+const API_BASE = process.env.API_BASE;
+const PAYMENT_LINK = process.env.PAYMENT_LINK;
 
 const ALARM_NAME = 'auth-revalidation';
 const REVALIDATION_INTERVAL_MINUTES = 15;
 const CACHE_TTL_MS = 15 * 60 * 1000;
 
-async function tryRefreshToken(refreshToken) {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    });
-    const data = await res.json();
-    if (data.access_token) {
-      await chrome.storage.local.set({
-        accessToken: data.access_token,
-        refreshToken: data.refresh_token || refreshToken,
-      });
-      return data.access_token;
-    }
-  } catch {
-    // Network error during refresh — keep existing tokens
-  }
-  return null;
+let inFlight = null;
+
+function verify(jwt, deviceId, deviceLabel) {
+  return fetch(`${API_BASE}/auth/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jwt, deviceId, deviceLabel }),
+  });
 }
 
-async function revalidate() {
+async function doRevalidate() {
   const stored = await chrome.storage.local.get(['accessToken', 'refreshToken']);
   if (!stored.accessToken) return;
 
-  try {
-    let res = await fetch(`${API_BASE}/auth/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jwt: stored.accessToken }),
-    });
+  const deviceId = await getDeviceId();
+  const deviceLabel = getDeviceLabel();
 
-    if (res.status === 401 && stored.refreshToken) {
+  try {
+    let res = await verify(stored.accessToken, deviceId, deviceLabel);
+
+    if (res.status === 401) {
       const newToken = await tryRefreshToken(stored.refreshToken);
-      if (!newToken) return; // Can't refresh — let popup handle re-login
-      res = await fetch(`${API_BASE}/auth/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jwt: newToken }),
-      });
+      if (!newToken) {
+        // Session is dead — drop the cached access so the popup asks to log in.
+        await chrome.storage.local.remove('authStatus');
+        return;
+      }
+      res = await verify(newToken, deviceId, deviceLabel);
     }
 
     if (res.ok) {
@@ -60,9 +46,23 @@ async function revalidate() {
       });
     }
   } catch {
-    // Network error — keep existing cached status so offline usage works
-    // within the 15-min window. It will expire naturally.
+    // Network error — keep the cached status; its signed token carries its own
+    // expiry, so offline use still ends on time.
   }
+}
+
+function revalidate() {
+  if (!inFlight) inFlight = doRevalidate().finally(() => { inFlight = null; });
+  return inFlight;
+}
+
+async function openCheckout() {
+  const { authStatus, userEmail } = await chrome.storage.local.get(['authStatus', 'userEmail']);
+  const url = new URL(PAYMENT_LINK);
+  const email = authStatus?.email || userEmail;
+  if (email) url.searchParams.set('prefilled_email', email);
+  if (authStatus?.userId) url.searchParams.set('client_reference_id', authStatus.userId);
+  chrome.tabs.create({ url: url.toString() });
 }
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -71,9 +71,25 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.runtime.onStartup.addListener(() => {
+  chrome.alarms.create(ALARM_NAME, { periodInMinutes: REVALIDATION_INTERVAL_MINUTES });
   revalidate();
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === ALARM_NAME) revalidate();
+});
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (sender.id !== chrome.runtime.id) return;
+  if (msg?.type === 'REVALIDATE') {
+    revalidate().then(() => sendResponse({ done: true }));
+    return true;
+  }
+  if (msg?.type === 'OPEN_CHECKOUT') {
+    openCheckout();
+  }
+  if (msg?.type === 'OPEN_POPUP') {
+    // Available in Chrome 127+; ignore if unsupported.
+    chrome.action.openPopup?.().catch(() => {});
+  }
 });

@@ -110,3 +110,16 @@ export async function resendSignupOtp(email) {
   data.__status = res.status;
   return data;
 }
+
+// Revokes the session's refresh token server-side (best effort).
+export async function signOutRemote(accessToken) {
+  if (!accessToken) return;
+  try {
+    await fetchWithTimeout(`${SUPABASE_URL}/auth/v1/logout`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${accessToken}` },
+    }, 5000);
+  } catch {
+    // Offline — local sign-out still proceeds.
+  }
+}

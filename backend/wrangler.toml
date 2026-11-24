@@ -1,0 +1,25 @@
+name = "address-filler-api"
+main = "src/index.js"
+compatibility_date = "2024-12-01"
+
+[vars]
+SUPABASE_URL = "https://tahjkdlttlxgqhoxjqxd.supabase.co"
+# Anon key is public — safe to commit
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhaGprZGx0dGx4Z3Fob3hqcXhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTk2MjAsImV4cCI6MjA5MzMzNTYyMH0.7k1XKp2g6iOzetJZZWTI-Gqh1okTwJumWLkLgNpw2c8"
+
+# Per-seat licensing: how many devices (installs) one account may activate.
+# 1 = strict one-computer-per-license. Bump to 2 if you want to tolerate a
+# customer using two Chrome profiles/browsers on the same PC.
+DEVICE_LIMIT = "1"
+# Minimum hours between self-service device removals, to stop seat sharing by
+# rotating devices. Set to "0" to disable the cooldown.
+DEVICE_SWAP_COOLDOWN_HOURS = "24"
+
+# Set these via `wrangler secret put <NAME>` — never commit secrets:
+# wrangler secret put SUPABASE_SERVICE_KEY
+# wrangler secret put STRIPE_SECRET_KEY
+# wrangler secret put STRIPE_WEBHOOK_SECRET
+# wrangler secret put RESEND_API_KEY
+# wrangler secret put STATUS_PRIVATE_KEY   (ECDSA P-256 private JWK, see .secrets/)
+# wrangler secret put EXTENSION_ID         (comma-separated extension IDs for CORS)
+# Optional: RESEND_FROM (verified sender), PORTAL_RETURN_URL
