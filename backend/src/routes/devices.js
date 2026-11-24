@@ -28,12 +28,16 @@ export async function handleListDevices(request, env) {
   const current = url.searchParams.get('current');
 
   const devices = await listDevices(user.id, env);
-  const limit = parseInt(env.DEVICE_LIMIT ?? '1', 10) || 1;
+  const profile = await getProfileById(user.id, env);
+  const fallback = parseInt(env.DEVICE_LIMIT ?? '1', 10) || 1;
+  const paid = profile && (profile.subscription_status === 'active' || profile.subscription_status === 'past_due');
+  const limit = paid ? (parseInt(profile.device_limit, 10) || fallback) : fallback;
 
   return json({
     deviceLimit: limit,
     deviceCount: devices.length,
-    devices: devices.map(d => ({
+    devices: devices.map((d, i) => ({
+      active: i < limit,
       deviceId: d.device_id,
       label: d.label,
       createdAt: d.created_at,
@@ -65,7 +69,11 @@ export async function handleRemoveDevice(request, env) {
   const profile = await getProfileById(user.id, env, jwt);
   if (!profile) return json({ error: 'no_profile' }, 401);
 
-  const cooldown = swapCooldownMs(env);
+  // Seat swaps are throttled so one seat can't be time-shared. Bigger plans
+  // get proportionally shorter cooldowns (24h / seats).
+  const seats = (profile.subscription_status === 'active' || profile.subscription_status === 'past_due')
+    ? Math.max(1, parseInt(profile.device_limit, 10) || 1) : 1;
+  const cooldown = Math.floor(swapCooldownMs(env) / seats);
   const last = profile.last_device_change_at ? new Date(profile.last_device_change_at).getTime() : 0;
   const elapsed = Date.now() - last;
   if (cooldown > 0 && last && elapsed < cooldown) {

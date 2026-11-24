@@ -1,5 +1,6 @@
 import { signUp, signIn, sendPasswordReset, verifySignupOtp, resendSignupOtp, tryRefreshToken, signOutRemote } from './auth.js';
 import { getDeviceId, getDeviceLabel } from './device.js';
+import { PLANS, planByKey } from './plans.js';
 
 // API_BASE is injected at build time by webpack DefinePlugin.
 const API_BASE = process.env.API_BASE;
@@ -44,7 +45,9 @@ function syncPositionSelects(pos) {
 
 // ── Screen management ──────────────────────────────────────────────────────
 
-const SCREENS = ['loading', 'auth', 'otp', 'trial', 'subscribed', 'expired', 'devicelimit'];
+const SCREENS = ['loading', 'auth', 'otp', 'trial', 'subscribed', 'expired', 'devicelimit', 'plans'];
+
+let lastStatus = null;
 
 function showScreen(name) {
   SCREENS.forEach(s => {
@@ -165,13 +168,18 @@ function showOtpScreen(email) {
 
 function deviceCountText(status) {
   if (typeof status.deviceCount !== 'number' || typeof status.deviceLimit !== 'number') return '';
-  return `Devices: ${status.deviceCount} / ${status.deviceLimit}`;
+  return `Computers in use: ${Math.min(status.deviceCount, status.deviceLimit)} / ${status.deviceLimit}`;
 }
 
 function renderStatus(status) {
   const { allowed, reason, trialDaysLeft, email } = status;
+  lastStatus = status;
 
   if (allowed && reason === 'subscribed') {
+    const plan = planByKey(status.plan);
+    $('subscribed-plan').textContent = plan
+      ? `${plan.name} plan · ${plan.seats} computer${plan.seats !== 1 ? 's' : ''}`
+      : '';
     $('subscribed-email').textContent = email || '';
     $('subscribed-devices').textContent = deviceCountText(status);
     $('btn-manage').onclick = openBillingPortal;
@@ -226,9 +234,16 @@ function timeAgo(iso) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-async function showDeviceLimitScreen(status) {
+async function showDeviceLimitScreen(status, manage = false) {
   const limit = status?.deviceLimit;
-  $('devicelimit-intro').textContent = limit
+  const badge = document.querySelector('#screen-devicelimit .status-badge');
+  badge.textContent = manage ? 'Your Computers' : 'Device Limit Reached';
+  badge.classList.toggle('expired', !manage);
+  badge.classList.toggle('active', manage);
+  $('btn-devicelimit-retry').textContent = manage ? 'Done' : 'Retry on This Computer';
+  $('devicelimit-intro').textContent = manage
+    ? `Your plan includes ${limit || 1} computer${limit !== 1 ? 's' : ''}. Free a seat here to use a new computer.`
+    : limit
     ? `Your plan allows ${limit} device${limit !== 1 ? 's' : ''}. Remove one below to use this computer instead, then tap Retry.`
     : 'Remove a device below to use this computer instead, then tap Retry.';
   $('devicelimit-error').hidden = true;
@@ -270,7 +285,8 @@ async function loadDeviceList() {
     info.className = 'device-info';
     const name = document.createElement('div');
     name.className = 'device-name';
-    name.textContent = (d.label || 'Unknown device') + (d.isCurrent ? ' (this computer)' : '');
+    name.textContent = (d.label || 'Unknown device') + (d.isCurrent ? ' (this computer)' : '')
+      + (d.active === false ? ' (no seat)' : '');
     const meta = document.createElement('div');
     meta.className = 'device-meta';
     meta.textContent = `Last active ${timeAgo(d.lastSeen)}`;
@@ -342,6 +358,56 @@ $('btn-devicelimit-retry').addEventListener('click', async () => {
   showOverlay(false);
 });
 
+// ── Plans ──────────────────────────────────────────────────────────────────
+
+function showPlans() {
+  const current = lastStatus?.reason === 'subscribed' ? lastStatus.plan : null;
+  const list = $('plans-list');
+  list.innerHTML = '';
+  PLANS.forEach((plan) => {
+    const card = document.createElement('button');
+    card.className = 'plan-card' + (plan.key === current ? ' current' : '');
+
+    const left = document.createElement('div');
+    const name = document.createElement('div');
+    name.className = 'plan-name';
+    name.textContent = plan.name + (plan.key === current ? ' (current)' : '');
+    const seats = document.createElement('div');
+    seats.className = 'plan-seats';
+    seats.textContent = `${plan.seats} computer${plan.seats !== 1 ? 's' : ''}`;
+    left.appendChild(name);
+    left.appendChild(seats);
+
+    const price = document.createElement('div');
+    price.className = 'plan-price';
+    price.textContent = `$${plan.price % 1 ? plan.price.toFixed(2) : plan.price}`;
+    const per = document.createElement('small');
+    per.textContent = '/mo';
+    price.appendChild(per);
+
+    card.appendChild(left);
+    card.appendChild(price);
+    card.onclick = () => {
+      if (plan.key === current) return;
+      // Existing subscribers switch plans in the Stripe portal so they are
+      // never charged for two subscriptions at once.
+      if (current) openBillingPortal();
+      else chrome.runtime.sendMessage({ type: 'OPEN_CHECKOUT', plan: plan.key });
+    };
+    list.appendChild(card);
+  });
+  showScreen('plans');
+}
+
+$('btn-plans-back').addEventListener('click', () => {
+  if (lastStatus) renderStatus(lastStatus);
+  else showScreen('auth');
+});
+
+$('btn-devicelimit-plans').addEventListener('click', showPlans);
+
+$('btn-devices').addEventListener('click', () => showDeviceLimitScreen(lastStatus, true));
+
 // ── Main init ──────────────────────────────────────────────────────────────
 
 async function init() {
@@ -370,10 +436,18 @@ async function init() {
   // ended trial shows up as soon as the popup opens.
   if (stored.authStatus && Date.now() < stored.authStatus.expiresAt) {
     renderStatus(stored.authStatus);
-    if (stored.authStatus.reason === 'subscribed') return;
+    if (stored.authStatus.reason !== 'subscribed') {
+      await verifyAndRender(stored.accessToken, stored.refreshToken);
+    }
+  } else {
+    await verifyAndRender(stored.accessToken, stored.refreshToken);
   }
 
-  await verifyAndRender(stored.accessToken, stored.refreshToken);
+  // Opened from the on-page "See plans" button: jump straight to the plans.
+  if (stored.showPlans) {
+    await chrome.storage.local.set({ showPlans: false });
+    showPlans();
+  }
 }
 
 async function verifyAndRender(accessToken, refreshToken) {
@@ -721,7 +795,7 @@ $('login-password').addEventListener('keydown', (e) => {
 // id (client_reference_id) — that's how the payment gets linked to the account
 // even if a different email is typed at checkout.
 function openPaymentLink() {
-  chrome.runtime.sendMessage({ type: 'OPEN_CHECKOUT' });
+  showPlans();
 }
 
 async function openBillingPortal() {
@@ -738,6 +812,7 @@ async function openBillingPortal() {
       chrome.tabs.create({ url: data.url });
     } else {
       $('subscribed-email').textContent = 'Could not open billing. Please try again or email support.';
+      if (lastStatus) renderStatus(lastStatus);
     }
   } catch {
     $('subscribed-email').textContent = 'Connection failed. Check your internet and try again.';

@@ -30,7 +30,7 @@
         <input id="signup-email" type="email" placeholder="Email address" autocomplete="email">
         <input id="signup-password" type="password" placeholder="Password" autocomplete="new-password">
         <button id="btn-signup" class="btn primary">Create Free Account</button>
-        <p class="trial-hint">✓ 7-day free trial &nbsp;·&nbsp; then $9.99/month</p>
+        <p class="trial-hint">✓ 7-day free trial &nbsp;·&nbsp; plans from $9.99/month</p>
         <p class="switch-hint">Already have an account? <button id="btn-go-login" class="btn link">Log In</button></p>
       </div>
 
@@ -76,13 +76,14 @@
           <option value="bottom-left">Bottom Left</option>
         </select>
       </div>
-      <button id="btn-subscribe-trial" class="btn primary">Subscribe — $9.99/mo</button>
+      <button id="btn-subscribe-trial" class="btn primary">See plans</button>
       <button id="btn-signout-trial" class="btn text">Sign Out</button>
     </div>
 
     <!-- Screen: Subscribed -->
     <div id="screen-subscribed" class="screen" hidden>
       <div class="status-badge active">Active</div>
+      <p id="subscribed-plan" class="trial-days-text"></p>
       <p id="subscribed-email" class="info"></p>
       <p id="subscribed-devices" class="device-count"></p>
       <p class="hint">Copy an address, then click the red button on AliExpress to fill the form.</p>
@@ -96,7 +97,8 @@
           <option value="bottom-left">Bottom Left</option>
         </select>
       </div>
-      <button id="btn-manage" class="btn secondary">Manage Subscription</button>
+      <button id="btn-manage" class="btn secondary">Change plan / billing</button>
+      <button id="btn-devices" class="btn text">Manage computers</button>
       <button id="btn-signout-sub" class="btn text">Sign Out</button>
     </div>
 
@@ -104,7 +106,7 @@
     <div id="screen-expired" class="screen" hidden>
       <div class="status-badge expired">Access Ended</div>
       <p id="expired-reason" class="info"></p>
-      <button id="btn-subscribe-expired" class="btn primary">Subscribe — $9.99/mo</button>
+      <button id="btn-subscribe-expired" class="btn primary">See plans</button>
       <button id="btn-signout-expired" class="btn text">Sign Out</button>
     </div>
 
@@ -115,7 +117,17 @@
       <div id="devicelimit-list" class="device-list"></div>
       <div id="devicelimit-error" class="error" hidden></div>
       <button id="btn-devicelimit-retry" class="btn primary">Retry on This Computer</button>
+      <button id="btn-devicelimit-plans" class="btn secondary">Get more seats</button>
       <button id="btn-signout-devicelimit" class="btn text">Sign Out</button>
+    </div>
+
+    <!-- Screen: Plans -->
+    <div id="screen-plans" class="screen" hidden>
+      <h2 class="plans-title">Choose a plan</h2>
+      <p class="hint">One account. Each computer (Chrome profile) that signs in uses one seat.</p>
+      <div id="plans-list" class="plans-list"></div>
+      <p class="plans-note">Secure checkout by Stripe · Cancel anytime</p>
+      <button id="btn-plans-back" class="btn text">Back</button>
     </div>
 
     <!-- Loading overlay (shown during async operations within a screen) -->

@@ -10,7 +10,7 @@
     "secret:resend": "npm --prefix backend run secret:resend",
     "secret:supabase": "npm --prefix backend run secret:supabase",
     "test": "npm --prefix backend test",
-    "package": "npm run build && rm -f store/address-filler-extension.zip && cd dist && zip -qr ../store/address-filler-extension.zip . -x '*.DS_Store'"
+    "package": "npm run build && cd dist && zip -qr -FS ../store/address-filler-extension.zip . -x '*.DS_Store'"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^12.0.2",

@@ -151,8 +151,8 @@ export async function deleteDevice(accountId, deviceId, env) {
 }
 
 // ── Trial abuse guard ────────────────────────────────────────────────────────
-// One free trial per install: the first account that starts a trial on a
-// device claims it. Returns the claiming account id, or null if unclaimed.
+// One free trial per install, and at most a few new trials per network per
+// month. Returns the account id that claimed this device's trial, or null.
 export async function getTrialClaim(deviceId, env) {
   const res = await fetch(
     `${env.SUPABASE_URL}/rest/v1/trial_devices?device_id=eq.${encodeURIComponent(deviceId)}&select=account_id`,
@@ -163,7 +163,19 @@ export async function getTrialClaim(deviceId, env) {
   return rows[0]?.account_id ?? null;
 }
 
-export async function claimTrialDevice(deviceId, accountId, env) {
+// Number of trials started from this (hashed) network address since `sinceIso`.
+export async function countRecentTrialsFromIp(ipHash, sinceIso, env) {
+  if (!ipHash) return 0;
+  const res = await fetch(
+    `${env.SUPABASE_URL}/rest/v1/trial_devices?ip_hash=eq.${encodeURIComponent(ipHash)}&created_at=gte.${encodeURIComponent(sinceIso)}&select=account_id`,
+    { headers: authHeaders(env) }
+  );
+  if (!res.ok) return 0;
+  const rows = await res.json();
+  return new Set(rows.map(r => r.account_id)).size;
+}
+
+export async function claimTrialDevice(deviceId, accountId, ipHash, env) {
   await fetch(`${env.SUPABASE_URL}/rest/v1/trial_devices`, {
     method: 'POST',
     headers: {
@@ -171,6 +183,6 @@ export async function claimTrialDevice(deviceId, accountId, env) {
       'Content-Type': 'application/json',
       'Prefer': 'return=minimal,resolution=ignore-duplicates',
     },
-    body: JSON.stringify({ device_id: deviceId, account_id: accountId }),
+    body: JSON.stringify({ device_id: deviceId, account_id: accountId, ip_hash: ipHash || null }),
   });
 }

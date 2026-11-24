@@ -54,7 +54,7 @@ function showPaywall() {
 
     if (!signedIn) {
       title = 'Activate Address Filler';
-      body = 'Click the <strong>Address Filler</strong> icon in your Chrome toolbar to create a free account and start your <strong>7-day free trial</strong>.<br><span style="font-size:11px;color:#aaa;">Then $9.99/month — cancel anytime.</span>';
+      body = 'Click the <strong>Address Filler</strong> icon in your Chrome toolbar to create a free account and start your <strong>7-day free trial</strong>.<br><span style="font-size:11px;color:#aaa;">Plans from $9.99/month — cancel anytime.</span>';
       btnLabel = 'Open Address Filler';
       action = 'popup';
     } else if (status && (status.reason === 'trial_expired' || status.reason === 'trial_used')) {
@@ -62,13 +62,13 @@ function showPaywall() {
       body = status.reason === 'trial_used'
         ? 'A free trial was already used on this computer. Subscribe to keep autofilling addresses.'
         : 'Subscribe to continue autofilling addresses on AliExpress.';
-      btnLabel = 'Subscribe — $9.99/mo';
+      btnLabel = 'See plans';
     } else if (status && (status.reason === 'cancelled' || status.reason === 'payment_failed')) {
       title = 'Access paused';
       body = status.reason === 'payment_failed'
         ? 'Your last payment failed. Update your card to restore access.'
         : 'Your subscription was cancelled. Resubscribe to continue.';
-      btnLabel = 'Resubscribe — $9.99/mo';
+      btnLabel = 'See plans';
     } else if (status && status.reason === 'device_limit') {
       title = 'Device limit reached';
       body = 'Your plan is already active on another computer. Open the extension to manage your devices.';
@@ -96,9 +96,7 @@ function showPaywall() {
 
     overlay.querySelector('.subscribe').addEventListener('click', function () {
       chrome.runtime.sendMessage({ type: action === 'popup' ? 'OPEN_POPUP' : 'OPEN_CHECKOUT' }).catch(function () {});
-      if (action === 'popup') {
-        showToast('Click the Address Filler icon in your toolbar (puzzle-piece menu if it is hidden).');
-      }
+      showToast('Click the Address Filler icon in your toolbar (puzzle-piece menu if it is hidden).');
       overlay.remove();
     });
     overlay.querySelector('.close').addEventListener('click', function () {

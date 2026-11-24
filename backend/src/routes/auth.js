@@ -1,7 +1,9 @@
 import {
   getUserFromJwt, getProfileById, insertProfile, updateProfile,
   listDevices, insertDevice, touchDevice, getTrialClaim, claimTrialDevice,
+  countRecentTrialsFromIp,
 } from '../utils/supabase.js';
+import { PORTAL_CONFIGURATION } from '../utils/plans.js';
 import { createPortalSession } from '../utils/stripe.js';
 import { signStatusToken } from '../utils/crypto.js';
 
@@ -10,14 +12,32 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 // How long a signed "allowed" token stays valid. The extension refreshes every
 // 15 minutes, so this only matters when the user is offline.
 const TOKEN_TTL_MS = 2 * 60 * 60 * 1000;
+// At most this many different accounts may start a free trial from the same
+// network (IP address) within TRIAL_IP_WINDOW_DAYS.
+const TRIALS_PER_IP = 3;
+const TRIAL_IP_WINDOW_DAYS = 30;
 
 function json(data, status = 200) {
   return Response.json(data, { status });
 }
 
-function deviceLimit(env) {
-  const n = parseInt(env.DEVICE_LIMIT ?? '1', 10);
-  return Number.isFinite(n) && n > 0 ? n : 1;
+// Seats this account may use right now. Trials always get 1 seat; paid plans
+// get the seat count stored on the profile by the Stripe webhook.
+function seatLimit(profile, env) {
+  const fallback = parseInt(env.DEVICE_LIMIT ?? '1', 10) || 1;
+  const paid = profile.subscription_status === 'active' || profile.subscription_status === 'past_due';
+  if (!paid) return fallback;
+  const n = parseInt(profile.device_limit, 10);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+// SHA-256 of the client IP with a server-side salt. Only the hash is stored.
+async function hashIp(request, env) {
+  const ip = request.headers.get('CF-Connecting-IP');
+  if (!ip) return null;
+  const salt = env.IP_HASH_SALT || env.SUPABASE_URL || '';
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${salt}|${ip}`));
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 function validDeviceId(id) {
@@ -25,12 +45,14 @@ function validDeviceId(id) {
 }
 
 // Registers this device against the account, enforcing the per-seat limit.
-async function gateDevice(accountId, deviceId, label, env) {
-  const limit = deviceLimit(env);
-  const devices = await listDevices(accountId, env);
-  const known = devices.some(d => d.device_id === deviceId);
+async function gateDevice(accountId, deviceId, label, limit, env) {
+  const devices = await listDevices(accountId, env); // oldest first
+  const index = devices.findIndex(d => d.device_id === deviceId);
 
-  if (known) {
+  if (index !== -1) {
+    // After a downgrade an account can hold more devices than seats; only the
+    // oldest `limit` keep working until the customer removes the extras.
+    if (index >= limit) return { ok: false, deviceCount: devices.length, deviceLimit: limit };
     await touchDevice(accountId, deviceId, env);
     return { ok: true, deviceCount: devices.length, deviceLimit: limit };
   }
@@ -96,7 +118,7 @@ export async function handleAuthVerify(request, env) {
 
   const now = new Date();
   const email = profile.email || user.email;
-  const base = { email, userId: user.id };
+  const base = { email, userId: user.id, plan: profile.plan || null };
 
   // ── Step 1: base access decision (subscription/trial state) ───────────────
   let decision;
@@ -129,11 +151,20 @@ export async function handleAuthVerify(request, env) {
       // One trial per install: if another account already used a trial on this
       // device, this account gets no trial (it can still subscribe).
       const claimedBy = await getTrialClaim(deviceId, env);
-      if (claimedBy && claimedBy !== profile.id) {
+      let trialBlocked = claimedBy && claimedBy !== profile.id;
+      let ipHash = null;
+      if (!claimedBy && !trialBlocked && now < trialEnd) {
+        // New install starting a trial: also cap trials per network so
+        // reinstalling with fresh emails doesn't give unlimited free use.
+        ipHash = await hashIp(request, env);
+        const since = new Date(Date.now() - TRIAL_IP_WINDOW_DAYS * DAY_MS).toISOString();
+        if (await countRecentTrialsFromIp(ipHash, since, env) >= TRIALS_PER_IP) trialBlocked = true;
+      }
+      if (trialBlocked) {
         await updateProfile(profile.id, { subscription_status: 'expired', trial_ends_at: now.toISOString() }, env);
         decision = { ...base, allowed: false, reason: 'trial_used' };
       } else if (now < trialEnd) {
-        if (!claimedBy) await claimTrialDevice(deviceId, profile.id, env);
+        if (!claimedBy) await claimTrialDevice(deviceId, profile.id, ipHash, env);
         const daysLeft = Math.ceil((trialEnd - now) / DAY_MS);
         decision = { ...base, allowed: true, reason: 'trial', trialDaysLeft: daysLeft, trialEndsAt: trialEnd.toISOString() };
         accessUntil = trialEnd.getTime();
@@ -150,7 +181,7 @@ export async function handleAuthVerify(request, env) {
 
   // ── Step 2: device binding (only gate users who otherwise have access) ────
   if (decision.allowed) {
-    const gate = await gateDevice(profile.id, deviceId, deviceLabel, env);
+    const gate = await gateDevice(profile.id, deviceId, deviceLabel, seatLimit(profile, env), env);
     decision.deviceCount = gate.deviceCount;
     decision.deviceLimit = gate.deviceLimit;
     if (!gate.ok) {
@@ -193,7 +224,8 @@ export async function handleBillingPortal(request, env) {
   const session = await createPortalSession(
     profile.stripe_customer_id,
     env.STRIPE_SECRET_KEY,
-    env.PORTAL_RETURN_URL || 'https://autoformfiller.xyz'
+    env.PORTAL_RETURN_URL || 'https://autoformfiller.xyz',
+    env.PORTAL_CONFIGURATION || PORTAL_CONFIGURATION
   );
   if (!session?.url) return json({ error: 'portal_failed' }, 502);
   return json({ url: session.url });

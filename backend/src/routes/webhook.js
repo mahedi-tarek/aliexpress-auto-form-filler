@@ -1,5 +1,7 @@
 import { verifyStripeSignature } from '../utils/crypto.js';
 import { getProfileById, getProfileByEmail, getProfileByStripeCustomer, updateProfile } from '../utils/supabase.js';
+import { getSubscription } from '../utils/stripe.js';
+import { planForSubscription } from '../utils/plans.js';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const GRACE_MS = 3 * 24 * 60 * 60 * 1000;
@@ -78,6 +80,18 @@ export async function handleWebhook(request, env) {
   return new Response('ok', { status: 200 });
 }
 
+// The invoice's subscription id across Stripe API versions.
+function invoiceSubscriptionId(invoice) {
+  return invoice?.subscription
+    || invoice?.parent?.subscription_details?.subscription
+    || invoice?.lines?.data?.[0]?.parent?.subscription_item_details?.subscription
+    || null;
+}
+
+function planFields(plan) {
+  return { plan: plan.key, device_limit: plan.seats };
+}
+
 async function processEvent(event, env) {
   switch (event.type) {
     case 'checkout.session.completed': {
@@ -85,6 +99,13 @@ async function processEvent(event, env) {
       const customerId = session.customer;
       const subscriptionId = session.subscription;
       if (!subscriptionId) break;
+
+      // This Stripe account also sells other products. Only subscriptions to an
+      // Address Filler price may unlock an account.
+      const sub = await getSubscription(subscriptionId, env.STRIPE_SECRET_KEY);
+      if (!sub) throw new Error('could not load subscription'); // Stripe retries
+      const plan = planForSubscription(sub);
+      if (!plan) break;
 
       // Prefer the Supabase user id the extension passes as client_reference_id
       // (works even if the customer types a different email at checkout).
@@ -113,6 +134,7 @@ async function processEvent(event, env) {
         subscription_id: subscriptionId,
         subscription_status: 'active',
         grace_period_end: null,
+        ...planFields(plan),
       }, env);
       if (!ok) throw new Error('profile update failed');
 
@@ -123,16 +145,20 @@ async function processEvent(event, env) {
     case 'customer.subscription.created':
     case 'customer.subscription.updated': {
       const sub = event.data.object;
+      const plan = planForSubscription(sub);
+      if (!plan) break; // not an Address Filler subscription
       const profile = await getProfileByStripeCustomer(sub.customer, env);
       if (!profile) break;
       // Ignore events for an older subscription the customer already replaced.
       if (profile.subscription_id && profile.subscription_id !== sub.id && sub.status !== 'active' && sub.status !== 'trialing') break;
 
       if (sub.status === 'active' || sub.status === 'trialing') {
-        await updateProfile(profile.id, { subscription_status: 'active', subscription_id: sub.id, grace_period_end: null }, env);
+        await updateProfile(profile.id, {
+          subscription_status: 'active', subscription_id: sub.id, grace_period_end: null, ...planFields(plan),
+        }, env);
       } else if (sub.status === 'past_due') {
         // Don't extend an existing grace window on repeated events.
-        const fields = { subscription_status: 'past_due' };
+        const fields = { subscription_status: 'past_due', ...planFields(plan) };
         if (profile.subscription_status !== 'past_due' || !profile.grace_period_end) {
           fields.grace_period_end = new Date(Date.now() + GRACE_MS).toISOString();
         }
@@ -145,6 +171,7 @@ async function processEvent(event, env) {
 
     case 'customer.subscription.deleted': {
       const sub = event.data.object;
+      if (!planForSubscription(sub)) break;
       const profile = await getProfileByStripeCustomer(sub.customer, env);
       if (!profile) break;
       if (profile.subscription_id && profile.subscription_id !== sub.id) break;
@@ -154,8 +181,9 @@ async function processEvent(event, env) {
 
     case 'invoice.payment_failed': {
       const invoice = event.data.object;
+      const subId = invoiceSubscriptionId(invoice);
       const profile = await getProfileByStripeCustomer(invoice.customer, env);
-      if (!profile) break;
+      if (!profile || !subId || profile.subscription_id !== subId) break; // not ours
       if (profile.subscription_status === 'past_due' && profile.grace_period_end) break;
 
       await updateProfile(profile.id, {

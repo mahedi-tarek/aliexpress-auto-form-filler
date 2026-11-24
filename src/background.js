@@ -1,9 +1,9 @@
-// API_BASE / PAYMENT_LINK are injected at build time by webpack DefinePlugin.
+// API_BASE is injected at build time by webpack DefinePlugin.
 import { tryRefreshToken } from './auth.js';
 import { getDeviceId, getDeviceLabel } from './device.js';
+import { PLANS, planByKey } from './plans.js';
 
 const API_BASE = process.env.API_BASE;
-const PAYMENT_LINK = process.env.PAYMENT_LINK;
 
 const ALARM_NAME = 'auth-revalidation';
 const REVALIDATION_INTERVAL_MINUTES = 15;
@@ -56,9 +56,10 @@ function revalidate() {
   return inFlight;
 }
 
-async function openCheckout() {
+async function openCheckout(planKey) {
   const { authStatus, userEmail } = await chrome.storage.local.get(['authStatus', 'userEmail']);
-  const url = new URL(PAYMENT_LINK);
+  const plan = planByKey(planKey) || PLANS[0];
+  const url = new URL(plan.link);
   const email = authStatus?.email || userEmail;
   if (email) url.searchParams.set('prefilled_email', email);
   if (authStatus?.userId) url.searchParams.set('client_reference_id', authStatus.userId);
@@ -86,7 +87,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
   if (msg?.type === 'OPEN_CHECKOUT') {
-    openCheckout();
+    if (msg.plan) {
+      openCheckout(msg.plan);
+    } else {
+      // No plan picked yet (e.g. from the on-page paywall): show the plans.
+      chrome.storage.local.set({ showPlans: true }).then(() => chrome.action.openPopup?.().catch(() => {}));
+    }
   }
   if (msg?.type === 'OPEN_POPUP') {
     // Available in Chrome 127+; ignore if unsupported.

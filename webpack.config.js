@@ -31,7 +31,6 @@ module.exports = (env, argv) => {
         'process.env.SUPABASE_URL':      JSON.stringify(process.env.SUPABASE_URL),
         'process.env.SUPABASE_ANON_KEY': JSON.stringify(process.env.SUPABASE_ANON_KEY),
         'process.env.API_BASE':          JSON.stringify(process.env.API_BASE),
-        'process.env.PAYMENT_LINK':      JSON.stringify(process.env.PAYMENT_LINK),
       }),
       new CopyPlugin({
         patterns: [
